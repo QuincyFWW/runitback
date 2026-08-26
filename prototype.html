@@ -1,0 +1,524 @@
+<title>Run It Back</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,400;0,600;0,800;1,700;1,900&display=swap">
+<style>
+  :root{
+    --midnight:#001905; --deep:#003219; --field:#007D32;
+    --mist:#E6EBE1; --fog:#AFB9AA; --storm:#55695F;
+    --athletic:#19AF64; --bright:#7DFF96; --black:#0A0A0A;
+    --font:'Albert Sans',-apple-system,'Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--midnight); color:var(--mist);
+    font-family:var(--font); font-weight:400; letter-spacing:-0.02em; line-height:1.3;
+    min-height:100vh;
+  }
+  button{font-family:var(--font); cursor:pointer; border:none; background:none; color:inherit}
+  button:focus-visible{outline:2px solid var(--bright); outline-offset:2px}
+
+  .hero{font-weight:900; font-style:italic; letter-spacing:-0.03em; line-height:.95; text-transform:uppercase; text-wrap:balance}
+  .eyebrow{font-weight:400; letter-spacing:.1em; text-transform:uppercase; font-size:.72rem; color:var(--fog)}
+
+  /* ---------- shell ---------- */
+  .shell{max-width:1100px; margin:0 auto; padding:14px 14px 60px}
+  .topbar{display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:6px 2px 16px}
+  .topbar .mark{font-weight:900; font-style:italic; font-size:1.05rem; letter-spacing:-0.03em}
+  .topbar .mark span{color:var(--bright)}
+  .tabs{display:flex; gap:6px; margin-left:auto}
+  .tab{padding:9px 16px; border-radius:999px; font-weight:600; font-size:.85rem; color:var(--fog); border:1px solid var(--deep)}
+  .tab[aria-selected="true"]{background:var(--bright); color:var(--midnight); border-color:var(--bright)}
+  .stepper{display:flex; align-items:center; gap:10px; justify-content:center; padding:12px 0 18px}
+  .stepbtn{width:44px; height:44px; border-radius:50%; border:1px solid var(--storm); color:var(--mist); font-size:1.2rem; font-weight:600; display:grid; place-items:center}
+  .stepbtn:active{background:var(--deep)}
+  .steplabel{min-width:220px; text-align:center}
+  .steplabel .eyebrow{display:block; margin-bottom:2px}
+  .steplabel strong{font-weight:800; font-size:.95rem; letter-spacing:-0.02em}
+  .protonote{text-align:center; color:var(--storm); font-size:.75rem; max-width:52ch; margin:0 auto 14px}
+
+  /* ---------- phone ---------- */
+  .phonewrap{display:flex; justify-content:center}
+  .phone{
+    width:100%; max-width:410px; background:var(--midnight);
+    border:1px solid var(--deep); border-radius:26px; overflow:hidden;
+    min-height:680px; display:flex; flex-direction:column; position:relative;
+  }
+  .p-head{display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--deep)}
+  .p-head .mark{font-weight:900; font-style:italic; font-size:.85rem}
+  .pill{display:flex; align-items:center; gap:6px; font-size:.68rem; color:var(--fog); letter-spacing:.08em; text-transform:uppercase}
+  .pill .dot{width:8px; height:8px; border-radius:50%; background:var(--bright)}
+  .p-body{flex:1; padding:20px 18px 26px; display:flex; flex-direction:column; gap:16px; overflow-y:auto}
+  .p-body.center{justify-content:center; text-align:center; gap:22px}
+
+  .cashbar{position:sticky; top:-20px; z-index:5; background:var(--deep); border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:baseline}
+  .cashbar .eyebrow{color:var(--fog)}
+  .cash{font-weight:900; font-style:italic; font-size:1.7rem; letter-spacing:-0.03em; color:var(--bright); font-variant-numeric:tabular-nums; transition:color .2s}
+  .cash.low{color:var(--mist)}
+
+  .cat h3{font-weight:800; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--fog); margin-bottom:8px}
+  .opts{display:flex; flex-direction:column; gap:8px}
+  .opt{display:flex; justify-content:space-between; align-items:center; gap:10px; text-align:left;
+       background:var(--deep); border:1px solid var(--deep); border-radius:14px; padding:13px 15px; color:var(--mist); font-size:.95rem; font-weight:600}
+  .opt .price{font-variant-numeric:tabular-nums; color:var(--fog); font-weight:600}
+  .opt[aria-pressed="true"]{border-color:var(--bright); background:#00250E}
+  .opt[aria-pressed="true"] .price{color:var(--bright)}
+  .opt:disabled{opacity:.35; cursor:not-allowed}
+  .veh{display:block; text-align:left; background:var(--deep); border:1px solid var(--deep); border-radius:16px; padding:14px 15px}
+  .veh h4{font-weight:800; font-size:.95rem; letter-spacing:-0.02em}
+  .veh p{color:var(--fog); font-size:.8rem; line-height:1.4; margin:4px 0 10px; max-width:60ch}
+  .chips{display:flex; gap:7px; flex-wrap:wrap}
+  .chip{border:1px solid var(--storm); border-radius:999px; padding:7px 13px; font-size:.82rem; font-weight:600; color:var(--mist); font-variant-numeric:tabular-nums}
+  .chip[aria-pressed="true"]{background:var(--bright); border-color:var(--bright); color:var(--midnight); font-weight:800}
+  .chip:disabled{opacity:.3; cursor:not-allowed}
+
+  .p-hero{font-weight:900; font-style:italic; letter-spacing:-0.03em; line-height:.95; text-transform:uppercase; font-size:2.6rem}
+  .p-hero .hl{color:var(--bright)}
+  .p-sub{color:var(--fog); font-size:.95rem; max-width:34ch; margin:0 auto}
+  .bignum{font-weight:900; font-style:italic; font-size:3.4rem; letter-spacing:-0.03em; color:var(--bright); font-variant-numeric:tabular-nums}
+  .fineprint{color:var(--storm); font-size:.68rem; line-height:1.45; max-width:38ch; margin:0 auto}
+  .go{background:var(--bright); color:var(--midnight); font-weight:900; font-style:italic; text-transform:uppercase; letter-spacing:-0.02em;
+      border-radius:999px; padding:15px 30px; font-size:1rem; align-self:center}
+  .ghost{border:1px solid var(--storm); border-radius:999px; padding:12px 24px; font-weight:600; font-size:.85rem; color:var(--fog); align-self:center}
+
+  .dark .p-body{background:var(--black)}
+  .verdict-short .bignum{color:var(--mist)}
+  .taxline{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--deep); font-size:.92rem}
+  .taxline span:last-child{font-variant-numeric:tabular-nums; font-weight:600}
+  .taxline.total span{font-weight:900}
+  .neg{color:var(--fog)}
+
+  .recap{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .runcard{background:var(--deep); border-radius:16px; padding:14px}
+  .runcard.win{border:1px solid var(--athletic)}
+  .runcard h4{font-weight:900; font-style:italic; text-transform:uppercase; font-size:.85rem; margin-bottom:10px}
+  .runcard .row{display:flex; justify-content:space-between; font-size:.78rem; padding:4px 0; color:var(--fog)}
+  .runcard .row span:last-child{font-variant-numeric:tabular-nums; color:var(--mist)}
+  .runcard .stamp{margin-top:10px; font-weight:900; font-style:italic; text-transform:uppercase; font-size:.9rem}
+  .runcard .stamp.bad{color:var(--mist)} .runcard .stamp.good{color:var(--bright)}
+
+  /* ---------- big screen ---------- */
+  .stage{background:var(--midnight); border:1px solid var(--deep); border-radius:18px; aspect-ratio:16/9; container-type:inline-size; overflow:hidden; position:relative}
+  .slide{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:3cqw; padding:6cqw}
+  .slide .eyebrow{font-size:1.5cqw; letter-spacing:.14em}
+  .s-hero{font-weight:900; font-style:italic; letter-spacing:-0.03em; line-height:.92; text-transform:uppercase; font-size:8.5cqw; text-wrap:balance}
+  .s-hero .hl{color:var(--bright)}
+  .s-sub{color:var(--fog); font-size:2.2cqw; max-width:60ch}
+  .s-fine{color:var(--storm); font-size:1.4cqw; max-width:70ch}
+  .slide.black{background:var(--black)}
+  .qrbox{width:26cqw; height:26cqw; background:var(--mist); border-radius:2cqw; display:grid; place-items:center}
+  .qrbox canvas{width:82%; height:82%; image-rendering:pixelated}
+  .joincount{display:flex; align-items:baseline; gap:1.5cqw}
+  .joincount b{font-weight:900; font-style:italic; font-size:7cqw; color:var(--bright); font-variant-numeric:tabular-nums}
+  .joincount span{color:var(--fog); font-size:2cqw; text-transform:uppercase; letter-spacing:.1em}
+  .aggwrap{width:100%; max-width:78cqw; display:flex; flex-direction:column; gap:1.6cqw; text-align:left}
+  .agg{display:grid; grid-template-columns:16cqw 1fr 8cqw; align-items:center; gap:1.6cqw}
+  .agg .lab{font-weight:800; text-transform:uppercase; font-size:1.7cqw; letter-spacing:.02em}
+  .agg .bar{height:2.6cqw; background:var(--deep); border-radius:999px; overflow:hidden}
+  .agg .bar i{display:block; height:100%; background:var(--field); border-radius:999px}
+  .agg.hot .bar i{background:var(--bright)}
+  .agg .val{font-weight:900; font-style:italic; font-size:2cqw; color:var(--mist); font-variant-numeric:tabular-nums; text-align:right}
+  .ticker{position:absolute; bottom:3cqw; left:0; right:0; text-align:center; color:var(--storm); font-size:1.6cqw; letter-spacing:.06em; text-transform:uppercase}
+  .flip{display:grid; grid-template-columns:1fr auto 1fr; gap:4cqw; align-items:center; width:100%; max-width:80cqw}
+  .fliplist{background:var(--deep); border-radius:2cqw; padding:3cqw; text-align:left}
+  .fliplist.dim{opacity:.45}
+  .fliplist h5{font-size:1.5cqw; letter-spacing:.12em; text-transform:uppercase; color:var(--fog); margin-bottom:1.6cqw; font-weight:400}
+  .fliplist ol{list-style:none; display:flex; flex-direction:column; gap:1.2cqw}
+  .fliplist li{font-weight:900; font-style:italic; text-transform:uppercase; font-size:2.6cqw; letter-spacing:-0.02em}
+  .fliplist li small{display:block; font-weight:400; font-style:normal; font-size:1.4cqw; color:var(--fog); text-transform:none; letter-spacing:0}
+  .fliplist .late{color:var(--storm)}
+  .fliparrow{font-size:4cqw; color:var(--bright); font-weight:900; font-style:italic}
+  .screenwrap{max-width:980px; margin:0 auto}
+  .screenhint{text-align:center; color:var(--storm); font-size:.75rem; padding-top:10px}
+
+  @media (prefers-reduced-motion:no-preference){
+    .pulse{animation:pulse 1.6s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+    .slide,.p-body>*{animation:rise .35s ease both}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  }
+  @media (max-width:600px){
+    .steplabel{min-width:0; flex:1}
+    .recap{grid-template-columns:1fr 1fr}
+  }
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="mark">FINAL WHISTLE <span>WEALTH</span></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-phone" role="tab" aria-selected="true" onclick="setTab('phone')">Player phone</button>
+      <button class="tab" id="tab-screen" role="tab" aria-selected="false" onclick="setTab('screen')">Big screen</button>
+    </div>
+  </div>
+
+  <div class="stepper">
+    <button class="stepbtn" onclick="step(-1)" aria-label="Previous phase">‹</button>
+    <div class="steplabel"><span class="eyebrow" id="steptag">Phase</span><strong id="stepname"></strong></div>
+    <button class="stepbtn" onclick="step(1)" aria-label="Next phase">›</button>
+  </div>
+  <p class="protonote" id="protonote"></p>
+
+  <div class="phonewrap" id="view-phone">
+    <div class="phone" id="phone"></div>
+  </div>
+
+  <div class="screenwrap" id="view-screen" hidden>
+    <div class="stage" id="stage"></div>
+    <p class="screenhint">Projected view. In the real build the numbers move live as phones tap.</p>
+  </div>
+</div>
+
+<script>
+/* ================= game data (mirrors future game.js) ================= */
+const START = 100000, TAX = 30000;
+const fmt = n => '$' + n.toLocaleString('en-US');
+const MENU = [
+  {key:'car', label:'The Car', opts:[['Keep what you have',0],['Used upgrade',20000],['Nice new car',40000],['Go crazy',70000]]},
+  {key:'shopping', label:'Shopping', opts:[['Nothing',0],['Small spree',2000],['Upgrade the wardrobe',7000],['Go nuts',15000]]},
+  {key:'housing', label:'Housing', opts:[['Keep your setup',0],['New furniture',5000],['Better apartment',10000]]},
+  {key:'vacation', label:'Vacation', opts:[['Stay home',0],['Weekend trip',2000],['Big vacation',7000],['Luxury trip',15000]]},
+];
+const VEHICLES = [
+  {key:'hysa', label:'Savings', sub:'Safe. There when you need it.'},
+  {key:'sp500', label:'Investing (S&P 500)', sub:'A piece of the 500 biggest US companies. Built to grow over years.'},
+  {key:'roth', label:'Roth IRA', sub:'Retirement money. Goes in now, comes out tax-free later.'},
+];
+/* what things sell back for if you need cash (fraction of what you paid) */
+const DEP = {car:.6, housing:.5, shopping:.3, vacation:0};
+const assets = r => MENU.reduce((a,c)=> a + Math.round(r.spend[c.key]*DEP[c.key]), 0);
+const netWorth1 = () => assets(run1) + saved(run1) + cash1() - TAX;
+const netWorth2 = () => assets(run2) + saved(run2) + cash2();
+const CHIP_VALUES = [0,5000,10000,20000];
+const DISCLAIMER = 'For this game only. Real tax obligations vary based on your income, location, deductions and individual circumstances.';
+
+/* player state: two runs */
+const run1 = {spend:{car:0,shopping:0,housing:0,vacation:0}, save:{hysa:0,sp500:0,roth:0}, cover:{}};
+const run2 = {spend:{car:0,shopping:0,housing:0,vacation:0}, save:{hysa:0,sp500:0,roth:0}};
+const spent = r => Object.values(r.spend).reduce((a,b)=>a+b,0);
+const saved = r => Object.values(r.save).reduce((a,b)=>a+b,0);
+const cash1 = () => START - spent(run1) - saved(run1);
+const cash2 = () => START - TAX - saved(run2) - spent(run2);
+
+/* ================= phases ================= */
+const PHONE_PHASES = [
+  {id:'lobby',    tag:'Join',     name:'You just made $100K',
+   note:'What an athlete sees the moment the QR opens. No rules, no warning, straight into it.'},
+  {id:'r1',       tag:'Round 1',  name:'Spend It',
+   note:'Pick one option per category. The cash counter at the top is the whole scoreboard.'},
+  {id:'r2',       tag:'Round 2',  name:'Future You',
+   note:'Three vehicles, one line each: Savings, Investing, Roth IRA. Chips capped at cash left.'},
+  {id:'april',    tag:'Round 3',  name:'April Arrives',
+   note:'The screen goes black in sync with the big screen. Tap through the beats.'},
+  {id:'verdict',  tag:'Round 3',  name:'Your Verdict',
+   note:'Their own math, their own shortfall. The big screen shows the room stat at the same moment.'},
+  {id:'cover',    tag:'Round 3',  name:'Cover The Bill',
+   note:'Their own accounts plus what they bought, at sell-back prices. Toggle sources until the bar says covered. The trip has no resale.'},
+  {id:'r4tax',    tag:'Round 4',  name:'Run It Back: Taxes First',
+   note:'One beat. The $30K comes off before anything else. No choice to make yet.'},
+  {id:'r4save',   tag:'Round 4',  name:'Run It Back: Future You',
+   note:'Same vehicles, second chance, $70K on the table.'},
+  {id:'r4spend',  tag:'Round 4',  name:'Run It Back: Now Spend It',
+   note:'The fun menu returns. Whatever is left is actually theirs.'},
+  {id:'recap',    tag:'Finale',   name:'Your Score: Net Worth',
+   note:'The score is net worth: what their stuff is worth today plus what they put away, run 1 against run 2.'},
+];
+const SCREEN_PHASES = [
+  {id:'s-lobby',  tag:'Pre-game', name:'QR Lobby',
+   note:'Up on the projector while the room fills. The join counter is live.'},
+  {id:'s-open',   tag:'Open',     name:'You Just Made $100K',
+   note:'Quincy talks over this one. Ten seconds, then Round 1.'},
+  {id:'s-r1',     tag:'Round 1',  name:'Live Spending Board',
+   note:'The room average per category, moving live as phones tap. Fake numbers for now.'},
+  {id:'s-r2',     tag:'Round 2',  name:'Live Future-You Board',
+   note:'Same board, vehicle mix. April numbers stay hidden.'},
+  {id:'s-april',  tag:'Round 3',  name:'April Arrives',
+   note:'Dead black. Let it sit for three seconds before advancing.'},
+  {id:'s-bill',   tag:'Round 3',  name:'The Tax Bill',
+   note:'The fictional-bill disclaimer lives on this slide, small but readable.'},
+  {id:'s-stat',   tag:'Round 3',  name:'The Room Stat',
+   note:'This lands at the same moment every phone shows its personal verdict.'},
+  {id:'s-r4',     tag:'Round 4',  name:'Run It Back',
+   note:'Taxes come off on screen first, then the phones open back up.'},
+  {id:'s-flip',   tag:'Finale',   name:'The Flip',
+   note:'The order most people live, then the reverse. Quincy closes over this.'},
+  {id:'s-out',    tag:'Finale',   name:'The Line',
+   note:'Last slide. Stays up while he does the $2,500 reality beat.'},
+];
+
+let tab='phone', pi=0, si=0;
+
+/* ================= phone renders ================= */
+function head(){
+  return `<div class="p-head"><div class="mark">FWW</div>
+    <div class="pill"><span class="dot"></span>Connected</div></div>`;
+}
+function cashbar(val){
+  return `<div class="cashbar"><span class="eyebrow">You have left</span>
+    <span class="cash ${val<TAX?'low':''}">${fmt(val)}</span></div>`;
+}
+function renderPhone(){
+  const el=document.getElementById('phone');
+  const id=PHONE_PHASES[pi].id;
+  el.classList.toggle('dark', id==='april');
+  let b='';
+  if(id==='lobby') b=`<div class="p-body center">
+      <div><div class="eyebrow">Final Whistle Wealth presents</div></div>
+      <div class="p-hero">You just<br>made<br><span class="hl">$100,000.</span></div>
+      <p class="p-sub">Real NIL money hits your account Monday morning.</p>
+      <button class="go" onclick="step(1)">What are you doing with it?</button>
+      <p class="fineprint">Fictional money, real you. Nothing you tap here is saved to your name.</p>
+    </div>`;
+
+  if(id==='r1') b=`<div class="p-body">${cashbar(START - spent(run1))}
+    ${MENU.map(c=>`<div class="cat"><h3>${c.label}</h3><div class="opts">
+      ${c.opts.map(([t,v])=>`<button class="opt" aria-pressed="${run1.spend[c.key]===v}"
+        onclick="pick1('${c.key}',${v})"><span>${t}</span><span class="price">${v?fmt(v):'$0'}</span></button>`).join('')}
+    </div></div>`).join('')}</div>`;
+
+  if(id==='r2') b=`<div class="p-body">${cashbar(cash1())}
+    <div class="eyebrow">What about future you?</div>
+    ${VEHICLES.map(v=>`<div class="veh"><h4>${v.label}</h4><p>${v.sub}</p><div class="chips">
+      ${CHIP_VALUES.map(val=>`<button class="chip" aria-pressed="${run1.save[v.key]===val}"
+        ${val>0 && val>cash1()+run1.save[v.key] ? 'disabled':''}
+        onclick="pick2(1,'${v.key}',${val})">${val?fmt(val):'$0'}</button>`).join('')}
+    </div></div>`).join('')}</div>`;
+
+  if(id==='april') b=`<div class="p-body center">
+      <div class="p-hero pulse">April<br>arrives.</div>
+      <p class="p-sub">You owe taxes on every NIL dollar from last year.</p>
+      <div><div class="eyebrow">For this game</div><div class="bignum">$30,000</div></div>
+      <p class="fineprint">${DISCLAIMER}</p>
+      <button class="go" onclick="step(1)">See where you stand</button>
+    </div>`;
+
+  if(id==='verdict'){
+    const c=cash1(), short=TAX-c;
+    b=`<div class="p-body center ${short>0?'verdict-short':''}">
+      <div class="eyebrow">Your year</div>
+      <div style="width:100%;max-width:300px;text-align:left">
+        <div class="taxline"><span>NIL income</span><span>${fmt(START)}</span></div>
+        <div class="taxline"><span class="neg">Spent</span><span>-${fmt(spent(run1))}</span></div>
+        <div class="taxline"><span class="neg">Put away</span><span>-${fmt(saved(run1))}</span></div>
+        <div class="taxline total"><span>Cash on hand</span><span>${fmt(c)}</span></div>
+        <div class="taxline total"><span>Tax bill</span><span>-${fmt(TAX)}</span></div>
+      </div>
+      ${short>0
+        ? `<div class="p-hero">You're<br><span class="hl">${fmt(short)}</span><br>short.</div>`
+        : `<div class="p-hero">You can<br><span class="hl">cover it.</span></div>
+           <p class="p-sub">${fmt(c-TAX)} left after the bill. Most of the room can't say that.</p>`}
+      <button class="go" onclick="step(1)">${short>0?'Now what?':'Keep going'}</button>
+    </div>`;
+  }
+
+  if(id==='cover'){
+    const short=Math.max(0, TAX-cash1());
+    /* every source: [key, label, cash it raises] */
+    const catName={car:'the car',housing:'the furniture and setup',shopping:'the clothes',vacation:'the trip'};
+    const sources=[];
+    if(run1.save.hysa)  sources.push(['hysa',`Drain the savings`, run1.save.hysa]);
+    if(run1.save.sp500) sources.push(['sp500',`Sell the investments`, run1.save.sp500]);
+    if(run1.save.roth)  sources.push(['roth',`Pull from the Roth early. Comes with taxes plus a penalty`, Math.round(run1.save.roth*.8)]);
+    for(const c of MENU){
+      const paid=run1.spend[c.key]; if(!paid) continue;
+      const gets=Math.round(paid*DEP[c.key]);
+      if(gets>0) sources.push([c.key,`Sell ${catName[c.key]}. Paid ${fmt(paid)}, sells for`, gets]);
+    }
+    const covered = sources.reduce((a,[k,,v])=> a + (run1.cover[k]?v:0), 0)
+                  + (run1.cover.borrow ? Math.max(0, short - sources.reduce((a,[k,,v])=>a+(run1.cover[k]?v:0),0)) : 0);
+    const still = Math.max(0, short - covered);
+    b=`<div class="p-body">
+      <div class="cashbar"><span class="eyebrow">${still>0?'Still short':'Bill covered'}</span>
+        <span class="cash ${still>0?'low':''}">${still>0?fmt(still):'✓'}</span></div>
+      <div class="p-hero" style="font-size:1.9rem">Where does the ${short>0?fmt(short):'money'} come from?</div>
+      <div class="opts">
+        ${sources.map(([k,t,v])=>`<button class="opt" aria-pressed="${!!run1.cover[k]}" onclick="pickCover('${k}')">
+          <span>${t}</span><span class="price">${fmt(v)}</span></button>`).join('')}
+        ${run1.spend.vacation?`<button class="opt" disabled><span>Sell the trip. Already lived it</span><span class="price">$0</span></button>`:''}
+        <button class="opt" aria-pressed="${!!run1.cover.borrow}" onclick="pickCover('borrow')"><span>Credit card or borrow the rest</span></button>
+        <button class="opt" aria-pressed="${!!run1.cover.family}" onclick="pickCover('family')"><span>Ask family</span></button>
+      </div>
+      <p class="fineprint" style="margin:0">Notice the prices. Nothing sells back for what you paid. The problem was never the car or the trip. It was spending money before knowing what was actually yours to spend.</p>
+      <button class="go" onclick="step(1)">Run it back</button>
+    </div>`;
+  }
+
+  if(id==='r4tax') b=`<div class="p-body center">
+      <div class="eyebrow">Same $100,000. New order.</div>
+      <div class="p-hero">Taxes<br>come off<br><span class="hl">first.</span></div>
+      <div><div class="eyebrow">Set aside</div><div class="bignum" style="color:var(--mist)">-$30,000</div></div>
+      <div><div class="eyebrow">Yours to work with</div><div class="bignum">$70,000</div></div>
+      <p class="fineprint">${DISCLAIMER}</p>
+      <button class="go" onclick="step(1)">Now future you</button>
+    </div>`;
+
+  if(id==='r4save') b=`<div class="p-body">${cashbar(START-TAX-saved(run2)-spent(run2))}
+    <div class="eyebrow">Future you goes second this time</div>
+    ${VEHICLES.map(v=>`<div class="veh"><h4>${v.label}</h4><div class="chips">
+      ${CHIP_VALUES.map(val=>`<button class="chip" aria-pressed="${run2.save[v.key]===val}"
+        ${val>0 && val>START-TAX-saved(run2)-spent(run2)+run2.save[v.key] ? 'disabled':''}
+        onclick="pick2(2,'${v.key}',${val})">${val?fmt(val):'$0'}</button>`).join('')}
+    </div></div>`).join('')}</div>`;
+
+  if(id==='r4spend') b=`<div class="p-body">${cashbar(cash2())}
+    <div class="eyebrow">Now do whatever you want with it</div>
+    ${MENU.map(c=>`<div class="cat"><h3>${c.label}</h3><div class="opts">
+      ${c.opts.map(([t,v])=>`<button class="opt" aria-pressed="${run2.spend[c.key]===v}"
+        ${v>0 && v>cash2()+run2.spend[c.key] ? 'disabled':''}
+        onclick="pick4('${c.key}',${v})"><span>${t}</span><span class="price">${v?fmt(v):'$0'}</span></button>`).join('')}
+    </div></div>`).join('')}</div>`;
+
+  if(id==='recap'){
+    const short=Math.max(0,TAX-cash1());
+    const nw1=netWorth1(), nw2=netWorth2();
+    b=`<div class="p-body">
+      <div class="p-hero" style="font-size:1.9rem">Your score:<br>net worth</div>
+      <p class="p-sub" style="text-align:left;max-width:none;margin:0">What your stuff is worth today, plus everything you put away, minus what you owe.</p>
+      <div class="recap">
+        <div class="runcard"><h4>Run 1</h4>
+          <div class="row"><span>Your stuff, today</span><span>${fmt(assets(run1))}</span></div>
+          <div class="row"><span>Put away</span><span>${fmt(saved(run1))}</span></div>
+          <div class="row"><span>Cash after taxes</span><span>${fmt(cash1()-TAX)}</span></div>
+          <div class="stamp ${nw1<nw2?'bad':'good'}" style="font-size:1.15rem">${fmt(nw1)}</div>
+          ${short>0 ? `<div class="row"><span>April</span><span>${fmt(short)} short</span></div>`
+                    : `<div class="row"><span>April</span><span>Covered</span></div>`}
+        </div>
+        <div class="runcard win"><h4>Run 2</h4>
+          <div class="row"><span>Your stuff, today</span><span>${fmt(assets(run2))}</span></div>
+          <div class="row"><span>Put away</span><span>${fmt(saved(run2))}</span></div>
+          <div class="row"><span>Cash, taxes paid</span><span>${fmt(cash2())}</span></div>
+          <div class="stamp good" style="font-size:1.15rem">${fmt(nw2)}</div>
+          <div class="row"><span>April</span><span>Already handled</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;padding-top:6px">
+        <div class="eyebrow" style="margin-bottom:8px">The whole lesson</div>
+        <div class="p-hero" style="font-size:1.6rem">Spending isn't the problem.</div>
+        <p class="p-sub" style="margin-top:8px">Spending money you haven't accounted for is.</p>
+      </div>
+      <p class="fineprint" style="text-align:center">Education, not financial advice. Nothing here is saved to your name.</p>
+    </div>`;
+  }
+  el.innerHTML = head()+b;
+}
+
+/* phone interactions */
+function pick1(k,v){run1.spend[k]=run1.spend[k]===v?0:v; renderPhone();}
+function pick2(run,k,v){const r=run===1?run1:run2; r.save[k]=r.save[k]===v?0:v; renderPhone();}
+function pick4(k,v){run2.spend[k]=run2.spend[k]===v?0:v; renderPhone();}
+function pickCover(k){run1.cover[k]=!run1.cover[k]; renderPhone();}
+
+/* ================= big screen renders ================= */
+function fakeQR(canvas){
+  const ctx=canvas.getContext('2d'), n=21; canvas.width=n; canvas.height=n;
+  ctx.fillStyle='#E6EBE1'; ctx.fillRect(0,0,n,n); ctx.fillStyle='#001905';
+  let seed=7;
+  const rnd=()=> (seed=(seed*137+31)%211)/211;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){ if(rnd()>0.55) ctx.fillRect(x,y,1,1); }
+  [[0,0],[n-7,0],[0,n-7]].forEach(([ox,oy])=>{
+    ctx.fillStyle='#001905'; ctx.fillRect(ox,oy,7,7);
+    ctx.fillStyle='#E6EBE1'; ctx.fillRect(ox+1,oy+1,5,5);
+    ctx.fillStyle='#001905'; ctx.fillRect(ox+2,oy+2,3,3);
+  });
+}
+function aggRow(lab,pct,val,hot){
+  return `<div class="agg ${hot?'hot':''}"><span class="lab">${lab}</span>
+    <span class="bar"><i style="width:${pct}%"></i></span><span class="val">${val}</span></div>`;
+}
+function renderScreen(){
+  const el=document.getElementById('stage');
+  const id=SCREEN_PHASES[si].id;
+  let s='';
+  if(id==='s-lobby') s=`<div class="slide">
+      <div class="eyebrow">Final Whistle Wealth</div>
+      <div class="s-hero" style="font-size:5.5cqw">Grab your phone.<br>Scan in.</div>
+      <div class="qrbox"><canvas id="qr"></canvas></div>
+      <div class="joincount"><b>94</b><span>phones in</span></div>
+    </div>`;
+  if(id==='s-open') s=`<div class="slide">
+      <div class="s-hero">You just made<br><span class="hl">$100,000.</span></div>
+      <div class="s-sub">What are you doing with it?</div>
+    </div>`;
+  if(id==='s-r1') s=`<div class="slide">
+      <div class="eyebrow">What this room is spending, on average</div>
+      <div class="aggwrap">
+        ${aggRow('The car',76,'$26,700',true)}
+        ${aggRow('Shopping',26,'$9,100',false)}
+        ${aggRow('Housing',18,'$6,300',false)}
+        ${aggRow('Trips',22,'$7,800',false)}
+      </div>
+      <div class="ticker">Average total spent: $49,900 of $100,000 · 0:41 left</div>
+    </div>`;
+  if(id==='s-r2') s=`<div class="slide">
+      <div class="eyebrow">Future you, on average</div>
+      <div class="aggwrap">
+        ${aggRow('Savings',34,'$8,400',false)}
+        ${aggRow('Investing',28,'$7,100',false)}
+        ${aggRow('Roth IRA',12,'$3,000',false)}
+        ${aggRow('Put away $0',24,'23 of 94',true)}
+      </div>
+      <div class="ticker">0:22 left in Round 2</div>
+    </div>`;
+  if(id==='s-april') s=`<div class="slide black">
+      <div class="s-hero pulse">April<br>arrives.</div>
+    </div>`;
+  if(id==='s-bill') s=`<div class="slide black">
+      <div class="eyebrow">For this game</div>
+      <div class="s-hero">Tax bill:<br><span class="hl">$30,000</span></div>
+      <div class="s-fine">${DISCLAIMER}</div>
+    </div>`;
+  if(id==='s-stat') s=`<div class="slide black">
+      <div class="s-hero"><span class="hl">71 of 94</span><br>of you can't<br>cover it.</div>
+      <div class="s-sub">Check your phone. That number is yours.</div>
+    </div>`;
+  if(id==='s-r4') s=`<div class="slide">
+      <div class="eyebrow">Same money. New order.</div>
+      <div class="s-hero">Run it<br><span class="hl">back.</span></div>
+      <div class="s-sub">This time, taxes come off before you touch a dollar.</div>
+    </div>`;
+  if(id==='s-flip') s=`<div class="slide">
+      <div class="flip">
+        <div class="fliplist dim"><h5>How most people think</h5><ol>
+          <li>Earn</li><li>Spend</li><li>Save + invest</li><li class="late">Oh yeah... taxes</li>
+        </ol></div>
+        <div class="fliparrow">→</div>
+        <div class="fliplist"><h5>Think in reverse</h5><ol>
+          <li>Taxes <small>What isn't mine?</small></li>
+          <li>Save + invest <small>What do I want to keep?</small></li>
+          <li>Spend <small>What's actually mine to enjoy?</small></li>
+        </ol></div>
+      </div>
+    </div>`;
+  if(id==='s-out') s=`<div class="slide">
+      <div class="s-hero" style="font-size:6.5cqw">Spending isn't<br>the problem.</div>
+      <div class="s-sub" style="font-size:2.8cqw;color:var(--mist)">Spending money you haven't accounted for is.</div>
+      <div class="eyebrow" style="margin-top:2cqw">Final Whistle Wealth</div>
+    </div>`;
+  el.innerHTML=s;
+  const qr=document.getElementById('qr'); if(qr) fakeQR(qr);
+}
+
+/* ================= shell ================= */
+function setTab(t){
+  tab=t;
+  document.getElementById('tab-phone').setAttribute('aria-selected', t==='phone');
+  document.getElementById('tab-screen').setAttribute('aria-selected', t==='screen');
+  document.getElementById('view-phone').hidden = t!=='phone';
+  document.getElementById('view-screen').hidden = t!=='screen';
+  render();
+}
+function step(d){
+  if(tab==='phone') pi=Math.max(0,Math.min(PHONE_PHASES.length-1,pi+d));
+  else si=Math.max(0,Math.min(SCREEN_PHASES.length-1,si+d));
+  render();
+}
+function render(){
+  const list = tab==='phone'?PHONE_PHASES:SCREEN_PHASES;
+  const i = tab==='phone'?pi:si;
+  document.getElementById('steptag').textContent = list[i].tag + ' · ' + (i+1) + '/' + list.length;
+  document.getElementById('stepname').textContent = list[i].name;
+  document.getElementById('protonote').textContent = list[i].note;
+  if(tab==='phone') renderPhone(); else renderScreen();
+}
+render();
+</script>
