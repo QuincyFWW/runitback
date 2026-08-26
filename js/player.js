@@ -56,9 +56,9 @@
 
   /* ---- render ---- */
   function head() {
-    const t = Conn.countdown();
+    const t = Conn.countdownText();
     return '<div class="p-head"><div class="mark">FWW</div>'
-      + (t !== null ? '<span class="p-timer">0:' + String(t).padStart(2, '0') + '</span>' : '')
+      + (t !== null ? '<span class="p-timer">' + t + '</span>' : '')
       + '<div class="pill" id="pill"><span class="dot"></span><span id="pilltext">Connected</span></div></div>';
   }
   const cashbar = (label, val) => '<div class="cashbar"><span class="eyebrow">' + label + '</span>'
@@ -213,9 +213,9 @@
 
   /* countdown repaint without re-rendering inputs */
   setInterval(() => {
-    const t = Conn.countdown();
+    const t = Conn.countdownText();
     const el = document.querySelector('.p-timer');
-    if (el && t !== null) el.textContent = '0:' + String(t).padStart(2, '0');
+    if (el && t !== null) el.textContent = t;
   }, 1000);
 
   Conn.onPhase(() => { register().then(doWrite); render(); });

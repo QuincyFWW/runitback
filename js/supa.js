@@ -63,4 +63,9 @@ const Conn = {
     const end = new Date(s.phase_started_at).getTime() + s.phase_seconds * 1000;
     return Math.max(0, Math.round((end - (Date.now() + this.offsetMs)) / 1000));
   },
+  countdownText() {
+    const t = this.countdown();
+    if (t === null) return null;
+    return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  },
 };

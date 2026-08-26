@@ -15,8 +15,8 @@
   }
   const ticker = txt => '<div class="ticker">' + txt + '</div>';
   function clock() {
-    const t = Conn.countdown();
-    return t === null ? '' : ' · 0:' + String(t).padStart(2, '0') + ' left';
+    const t = Conn.countdownText();
+    return t === null ? '' : ' · ' + t + ' left';
   }
 
   function slide(phase) {
@@ -95,13 +95,20 @@
     return '<div class="slide"><div class="s-sub">...</div></div>';
   }
 
-  let lastPhase = null;
+  let lastPhase = null, lastHtml = '';
   function render(force) {
     if (!Conn.session) return;
     const phase = Conn.session.phase;
     if (phase === lastPhase && !force) return;
+    const html = slide(phase);
+    if (html === lastHtml) return;
+    lastHtml = html;
+    stage.innerHTML = html;
+    /* entrance animation only when the phase itself changes; data refreshes swap in flat */
+    if (phase === lastPhase) {
+      stage.querySelectorAll('.slide').forEach(el => { el.style.animation = 'none'; });
+    }
     lastPhase = phase;
-    stage.innerHTML = slide(phase);
   }
 
   /* one poller for the whole room's numbers */
