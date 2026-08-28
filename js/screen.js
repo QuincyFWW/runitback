@@ -30,7 +30,7 @@
     if (phase === 'lobby') return '<div class="slide">'
       + '<div class="eyebrow">Final Whistle Wealth</div>'
       + '<div class="s-hero" style="font-size:5.5cqw">Grab your phone.<br>Scan in.</div>'
-      + '<div class="s-sub">You just got offered a $100,000 NIL contract.</div>'
+      + '<div class="s-sub">You\'ve been offered a one-year NIL deal.</div>'
       + '<div class="qrbox"><img src="assets/qr.png?v=1" alt="QR code to join"></div>'
       + '<div class="joincount"><b>' + players + '</b><span>phones in</span></div></div>';
 

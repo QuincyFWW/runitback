@@ -1,19 +1,28 @@
-/* 150-player gameday simulation against the LOAD session.
-   Usage: RIB_LOAD_KEY=<host_key> node sim.js [players]
+/* 150-player gameday simulation. Every simulated athlete has a fake first name
+   and one coherent persona: run-1 picks, run-2 picks, real cash math throughout,
+   contract signed, answers locked. The pseudo-host walks all 13 phases.
+   Usage: RIB_LOAD_KEY=<host_key> [RIB_CODE=BC26] node sim.js [players]
    Asserts: >95% broadcast receipt <2s, p95 write <1.5s, zero lost rows. */
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 
 const URL = 'https://hsveuzsqxeyrzquyynxk.supabase.co';
 const ANON = 'sb_publishable_8unOQcvzasOPCh5IOHwIPg_NGC3QrO6';
-const CODE = 'LOAD';
+const CODE = process.env.RIB_CODE || 'LOAD';
 const KEY = process.env.RIB_LOAD_KEY;
 const N = parseInt(process.argv[2] || '150', 10);
 const G = require('../js/game.js');
 if (!KEY) { console.error('set RIB_LOAD_KEY'); process.exit(1); }
 
-const PHASE_SCHEDULE = ['contract', 'r1', 'r2', 'april', 'bill', 'verdict', 'cover', 'r4tax', 'r4save', 'r4spend', 'recap', 'board'];
+const PHASE_SCHEDULE = G.PHASES.map(p => p.id).filter(id => id !== 'lobby');
 const PHASE_MS = 12000;
+
+const NAMES = ['Jaylen', 'Marcus', 'DeAndre', 'Malik', 'Xavier', 'Tyrese', 'Amari', 'Jalen', 'Darius', 'Kobe',
+  'Zion', 'Trey', 'Cam', 'Isaiah', 'Elijah', 'Josh', 'Caleb', 'Micah', 'Noah', 'Ethan',
+  'Maya', 'Zoe', 'Aaliyah', 'Imani', 'Skylar', 'Jada', 'Nia', 'Kennedy', 'Sydney', 'Morgan',
+  'Taylor', 'Jordan', 'Riley', 'Peyton', 'Avery', 'Quinn', 'Reese', 'Bailey', 'Emerson', 'Rowan',
+  'Grace', 'Chloe', 'Layla', 'Sofia', 'Ava', 'Mia', 'Ella', 'Ruby', 'Naomi', 'Willow'];
+const fakeName = i => NAMES[i % NAMES.length] + (i >= NAMES.length ? ' ' + String.fromCharCode(64 + Math.ceil((i + 1) / NAMES.length)) : '');
 
 const writeLat = [], writeFail = [];
 const receipt = new Map(); // phase -> [latencies ms]
@@ -22,26 +31,37 @@ let sessionId = null, broadcastAt = {};
 const rand = a => a[Math.floor(Math.random() * a.length)];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function randomPayload(phase) {
-  if (phase === 'r1' || phase === 'r4spend') {
-    const p = {};
-    for (const c of G.MENU) p[c.key] = rand(c.opts)[1];
-    return p;
+/* one coherent athlete: instinct run, then the smart run, all math real */
+function makePersona() {
+  const run1 = G.emptyRun(), run2 = G.emptyRun();
+  for (const c of G.MENU) run1.spend[c.key] = rand(c.opts)[1];
+  let cash = G.START - G.spent(run1);
+  for (const v of G.VEHICLES) { const ch = rand(v.chips); if (ch <= cash) { run1.save[v.key] = ch; cash -= ch; } }
+  let cash2 = G.START - G.TAX;
+  for (const v of G.VEHICLES) { const ch = rand(v.chips); if (ch <= cash2) { run2.save[v.key] = ch; cash2 -= ch; } }
+  for (const c of G.MENU) {
+    const pick = rand(c.opts.filter(([, v]) => v <= cash2))[1];
+    run2.spend[c.key] = pick; cash2 -= pick;
   }
-  if (phase === 'r2' || phase === 'r4save') {
-    const p = {};
-    for (const v of G.VEHICLES) p[v.key] = rand(v.chips);
-    return p;
-  }
-  if (phase === 'cover') return { sources: { borrow: true } };
-  if (phase === 'contract') return { signed: true, locked: true };
+  return { run1, run2 };
+}
+
+function payloadFor(phase, p) {
+  if (phase === 'contract') return { payload: { signed: true, locked: true }, cash: G.START };
+  if (phase === 'r1') return { payload: { ...p.run1.spend, locked: true }, cash: G.cash1(p.run1) };
+  if (phase === 'r2') return { payload: { ...p.run1.save, locked: true }, cash: G.cash1(p.run1) };
+  if (phase === 'cover') return { payload: { sources: { borrow: true }, locked: true }, cash: G.cash1(p.run1) };
+  if (phase === 'r4save') return { payload: { ...p.run2.save, locked: true }, cash: G.cash2(p.run2) };
+  if (phase === 'r4spend') return { payload: { ...p.run2.spend, locked: true }, cash: G.cash2(p.run2) };
   return null;
 }
 
 async function player(i) {
   const sb = createClient(URL, ANON);
   const pid = crypto.randomUUID();
+  const persona = makePersona();
   let phase = 'lobby', subOk = false;
+  const written = new Set();
 
   const ch = sb.channel('session:' + CODE);
   ch.on('broadcast', { event: 'phase' }, ({ payload }) => {
@@ -54,19 +74,19 @@ async function player(i) {
   });
   await new Promise(res => ch.subscribe(s => { if (s === 'SUBSCRIBED') { subOk = true; res(); } if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') res(); }));
 
-  const { error: perr } = await sb.from('players').insert({ id: pid, session_id: sessionId, joined_phase: 'lobby' });
+  const { error: perr } = await sb.from('players').insert({ id: pid, session_id: sessionId, joined_phase: 'lobby', first_name: fakeName(i) });
   if (perr) writeFail.push('player:' + perr.message);
 
-  // keep writing random choices while the game runs
-  const until = Date.now() + PHASE_SCHEDULE.length * PHASE_MS + 5000;
+  // write each open round's answer, repeating like a real debounced phone
+  const until = Date.now() + (PHASE_SCHEDULE.length + 1) * PHASE_MS + 5000;
   while (Date.now() < until) {
     await sleep(2000 + Math.random() * 2000);
     if (!G.WRITE_PHASES.includes(phase)) continue;
-    const payload = randomPayload(phase);
-    const cash = 100000 - Math.floor(Math.random() * 80000);
+    const spec = payloadFor(phase, persona);
+    if (!spec) continue;
     const t0 = Date.now();
     const { error } = await sb.from('choices').upsert({
-      session_id: sessionId, player_id: pid, round: phase, payload, cash_left: cash,
+      session_id: sessionId, player_id: pid, round: phase, payload: spec.payload, cash_left: spec.cash,
     });
     if (error) writeFail.push(phase + ':' + error.message);
     else writeLat.push(Date.now() - t0);
@@ -77,7 +97,7 @@ async function player(i) {
 
 async function pseudoScreen() {
   const sb = createClient(URL, ANON);
-  const until = Date.now() + PHASE_SCHEDULE.length * PHASE_MS + 5000;
+  const until = Date.now() + (PHASE_SCHEDULE.length + 1) * PHASE_MS + 5000;
   let fails = 0, polls = 0;
   while (Date.now() < until) {
     const { error } = await sb.rpc('get_aggregates', { p_code: CODE });
@@ -93,10 +113,11 @@ async function pseudoHost() {
   await new Promise(res => ch.subscribe(s => { if (s === 'SUBSCRIBED') res(); }));
   for (const phase of PHASE_SCHEDULE) {
     await sleep(PHASE_MS);
-    const { error } = await sb.rpc('advance_round', { p_code: CODE, p_key: KEY, p_phase: phase, p_seconds: 90 });
+    const spec = G.PHASES.find(p => p.id === phase);
+    const { error } = await sb.rpc('advance_round', { p_code: CODE, p_key: KEY, p_phase: phase, p_seconds: spec.seconds || 0 });
     if (error) { console.error('advance failed', phase, error.message); continue; }
     broadcastAt[phase] = Date.now();
-    await ch.send({ type: 'broadcast', event: 'phase', payload: { phase, started_at: new Date().toISOString(), seconds: 90 } });
+    await ch.send({ type: 'broadcast', event: 'phase', payload: { phase, started_at: new Date().toISOString(), seconds: spec.seconds || 0 } });
     console.log('phase ->', phase);
   }
 }
@@ -108,7 +129,7 @@ async function pseudoHost() {
   sessionId = sess.id;
   await boot.rpc('advance_round', { p_code: CODE, p_key: KEY, p_phase: 'lobby', p_seconds: 0 });
 
-  console.log(`spawning ${N} players staggered over 20s...`);
+  console.log(`session ${CODE}: spawning ${N} named players staggered over 20s...`);
   const joins = [];
   for (let i = 0; i < N; i++) {
     joins.push(sleep(Math.random() * 20000).then(() => player(i)));
@@ -128,12 +149,14 @@ async function pseudoHost() {
   const expected = subs * Object.keys(broadcastAt).length;
 
   const { data: counts } = await boot.rpc('get_aggregates', { p_code: CODE });
+  const { data: board } = await boot.rpc('get_leaderboard', { p_code: CODE });
   console.log('\n===== RESULTS =====');
   console.log(`players spawned: ${N}, channel subscribed: ${subs}`);
   console.log(`broadcast receipts: ${rec}/${expected} (${(rec / expected * 100).toFixed(1)}%), <2s: ${(recFast / Math.max(1, rec) * 100).toFixed(1)}%`);
   console.log(`writes: ${writeLat.length} ok, ${writeFail.length} failed; p50 ${p(.5)}ms, p95 ${p(.95)}ms`);
   console.log(`screen polls: ${screen.polls}, failed: ${screen.fails}`);
   console.log('db row counts:', JSON.stringify(counts));
+  console.log('leaderboard top 3:', JSON.stringify(board));
   if (writeFail.length) console.log('sample failures:', writeFail.slice(0, 5));
   const pass = subs / N > .95 && rec / expected > .95 && recFast / Math.max(1, rec) > .95 && p(.95) < 1500 && writeFail.length === 0 && screen.fails === 0;
   console.log(pass ? 'PASS' : 'CHECK FAILURES ABOVE');
