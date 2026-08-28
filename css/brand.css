@@ -141,3 +141,9 @@ button:focus-visible{outline:2px solid var(--bright); outline-offset:2px}
 .lbrow .nw{font-weight:900; font-style:italic; color:var(--bright); font-size:2.6cqw; font-variant-numeric:tabular-nums}
 .lbrow.top{background:#00250E; outline:2px solid var(--bright)}
 .lbrow.top .rank{color:var(--bright)}
+
+/* host reset: quiet until armed, unmistakable after */
+.resetbtn{width:100%; margin-top:10px; padding:16px; border-radius:16px; border:1px solid var(--alert);
+  background:none; color:var(--alert); font:inherit; font-weight:800; font-size:.95rem; cursor:pointer}
+.resetbtn.armed{background:var(--alert); color:var(--midnight); font-weight:900; font-style:italic; animation:pulse 1s ease-in-out infinite}
+.resetbtn:disabled{opacity:.4}

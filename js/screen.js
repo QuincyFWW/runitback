@@ -159,5 +159,6 @@
 
   Conn.onPhase(() => render(false));
   Conn.onWinner(() => render(true));
+  Conn.onReset(() => { agg = null; board = null; lastHtml = ''; pollAgg(); });
   Conn.start();
 })();

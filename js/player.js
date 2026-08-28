@@ -260,6 +260,13 @@
     if (el && t !== null) el.textContent = t;
   }, 1000);
 
+  /* host reset: keep who you are (id + name), wipe every pick, start over clean */
+  Conn.onReset(() => {
+    S = { run1: G.emptyRun(), run2: G.emptyRun(), cover: {}, joinedPhase: 'lobby', locked: {}, name: S.name };
+    persist();
+    location.reload();
+  });
+
   Conn.onPhase(() => { register().then(doWrite); render(); });
   Conn.start();
 })();

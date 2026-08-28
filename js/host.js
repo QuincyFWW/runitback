@@ -71,6 +71,32 @@
     busy = false; render();
   };
 
+  /* full reset: needs a second tap within 5s so a stray thumb can't wipe the room */
+  let resetArmed = false, resetTimer = null;
+  window.resetGame = async function () {
+    if (busy) return;
+    if (!resetArmed) {
+      resetArmed = true;
+      msg = 'This wipes every player and restarts the lobby. Tap the red button again to confirm.';
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { resetArmed = false; msg = ''; render(); }, 5000);
+      render(); return;
+    }
+    clearTimeout(resetTimer); resetArmed = false;
+    busy = true; msg = 'Resetting...'; render();
+    try {
+      const { data, error } = await sb.rpc('reset_session', { p_code: SESSION_CODE, p_key: KEY });
+      if (error) throw error;
+      Conn.channel.send({ type: 'broadcast', event: 'reset', payload: {} });
+      const started = new Date().toISOString();
+      Conn.channel.send({ type: 'broadcast', event: 'phase', payload: { phase: 'lobby', started_at: started, seconds: 0 } });
+      if (Conn.session) { Conn.session.phase = 'lobby'; Conn.session.phase_started_at = started; Conn.session.phase_seconds = 0; }
+      msg = 'Reset done. ' + (data.players_wiped || 0) + ' players wiped, lobby is up.';
+      players = 0; locked = 0;
+    } catch (e) { msg = 'FAILED: ' + (e.message || 'no connection'); }
+    busy = false; render();
+  };
+
   function render() {
     const cur = Conn.session ? Conn.session.phase : '...';
     const i = idx(cur);
@@ -86,6 +112,8 @@
       + '</div>'
       + '<button class="phasebtn" style="margin-top:14px" onclick="drawWinner()" ' + (busy ? 'disabled' : '') + '>'
       + '<span>Draw a winner (covered the bill)</span><span class="tag">PRIZE</span></button>'
+      + '<button class="resetbtn' + (resetArmed ? ' armed' : '') + '" onclick="resetGame()" ' + (busy ? 'disabled' : '') + '>'
+      + (resetArmed ? 'TAP AGAIN TO WIPE EVERYTHING' : 'Reset game (wipes all players)') + '</button>'
       + '</div>';
     renderStat();
   }
