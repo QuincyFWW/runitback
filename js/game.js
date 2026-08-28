@@ -9,16 +9,24 @@
     { key: 'housing', label: 'Housing, for the year', opts: [['Live at home', 0], ['Shared apartment', 12000], ['Solo place', 25000], ['Downtown penthouse', 48000]] },
     { key: 'vacation', label: 'Vacation', opts: [['Stay home', 0], ['Weekend trip', 2000], ['Big vacation', 7000], ['Month-long trip', 15000], ['Take the PJ', 25000]] },
   ];
+  /* no explainer subs (8/28): Quincy talks these through live.
+     Roth chips stop at the real 2026 IRA contribution limit ($7,500). */
   const VEHICLES = [
-    { key: 'hysa', label: 'Savings', sub: 'Safe. There when you need it.', chips: [0, 5000, 10000, 20000] },
-    { key: 'sp500', label: 'Investing (S&P 500)', sub: 'A piece of the 500 biggest US companies. Built to grow over years.', chips: [0, 5000, 10000, 20000] },
-    { key: 'roth', label: 'Roth IRA', sub: 'Retirement money. Goes in now, comes out tax-free later. Capped at $7,000 a year.', chips: [0, 3500, 7000] },
+    { key: 'hysa', label: 'Savings', chips: [0, 5000, 10000, 20000] },
+    { key: 'sp500', label: 'Investing (S&P 500)', chips: [0, 5000, 10000, 20000] },
+    { key: 'roth', label: 'Roth IRA', chips: [0, 3750, 7500] },
   ];
   const CHIP_VALUES = [0, 5000, 10000, 20000];
   /* sell-back rates when covering the bill; rent and the trip are already spent.
      Roth early pull keeps 80% (penalty + taxes) */
   const DEP = { car: .6, housing: 0, shopping: .3, vacation: 0 };
   const ROTH_KEEP = .8;
+  /* what asking family raises; the number stays hidden until they tap it */
+  const FAMILY_HELP = 5000;
+  /* one year of growth on money put away, at long-run average rates:
+     savings ~4% APY, S&P 500 ~10% historical average, Roth invested the same.
+     Averages for the game, never a promise. */
+  const GROWTH = { hysa: .04, sp500: .10, roth: .10 };
   const DISCLAIMER = 'For this game only. Real tax obligations vary based on your income, location, deductions and individual circumstances.';
 
   /* the authoritative phase sequence; seconds drive the cosmetic countdown */
@@ -34,6 +42,7 @@
     { id: 'r4save', label: 'Run It Back: Future You', seconds: 60 },
     { id: 'r4spend', label: 'Run It Back: Spend It', seconds: 90 },
     { id: 'recap', label: 'Recap: Net Worth', seconds: 0 },
+    { id: 'board', label: 'Leaderboard', seconds: 0 },
   ];
   /* phases in which the phone writes a choices row, and which run object feeds it */
   const WRITE_PHASES = ['r1', 'r2', 'cover', 'r4save', 'r4spend'];
@@ -41,11 +50,13 @@
   const emptyRun = () => ({ spend: { car: 0, shopping: 0, housing: 0, vacation: 0 }, save: { hysa: 0, sp500: 0, roth: 0 } });
   const spent = r => Object.values(r.spend).reduce((a, b) => a + b, 0);
   const saved = r => Object.values(r.save).reduce((a, b) => a + b, 0);
+  /* what the put-away money is worth after a year of average growth */
+  const grownSaved = r => Object.keys(r.save).reduce((a, k) => a + Math.round(r.save[k] * (1 + GROWTH[k])), 0);
   const cash1 = run1 => START - spent(run1) - saved(run1);
   const cash2 = run2 => START - TAX - saved(run2) - spent(run2);
   const assets = r => MENU.reduce((a, c) => a + Math.round(r.spend[c.key] * DEP[c.key]), 0);
-  const netWorth1 = run1 => assets(run1) + saved(run1) + cash1(run1) - TAX;
-  const netWorth2 = run2 => assets(run2) + saved(run2) + cash2(run2);
+  const netWorth1 = run1 => assets(run1) + grownSaved(run1) + cash1(run1) - TAX;
+  const netWorth2 = run2 => assets(run2) + grownSaved(run2) + cash2(run2);
   const shortfall = run1 => Math.max(0, TAX - cash1(run1));
 
   const CAT_SELL = { car: 'the car', housing: 'the place', shopping: 'the clothes', vacation: 'the trip' };
@@ -66,14 +77,15 @@
   }
   function coverStillShort(run1, cover) {
     const short = shortfall(run1);
-    const fromSources = coverSources(run1).reduce((a, [k, , v]) => a + (cover[k] ? v : 0), 0);
+    const fromSources = coverSources(run1).reduce((a, [k, , v]) => a + (cover[k] ? v : 0), 0)
+      + (cover.family ? FAMILY_HELP : 0);
     const borrowed = cover.borrow ? Math.max(0, short - fromSources) : 0;
     return Math.max(0, short - fromSources - borrowed);
   }
 
   const G = {
-    START, TAX, fmt, MENU, VEHICLES, CHIP_VALUES, DEP, ROTH_KEEP, DISCLAIMER, SUNK,
-    PHASES, WRITE_PHASES, emptyRun, spent, saved, cash1, cash2, assets,
+    START, TAX, fmt, MENU, VEHICLES, CHIP_VALUES, DEP, ROTH_KEEP, FAMILY_HELP, GROWTH, DISCLAIMER, SUNK,
+    PHASES, WRITE_PHASES, emptyRun, spent, saved, grownSaved, cash1, cash2, assets,
     netWorth1, netWorth2, shortfall, coverSources, coverStillShort,
   };
   root.GAME = G;

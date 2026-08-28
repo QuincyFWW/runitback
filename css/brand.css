@@ -2,7 +2,7 @@
 :root{
   --midnight:#001905; --deep:#003219; --field:#007D32;
   --mist:#E6EBE1; --fog:#AFB9AA; --storm:#55695F;
-  --athletic:#19AF64; --bright:#7DFF96; --black:#0A0A0A;
+  --athletic:#19AF64; --bright:#7DFF96; --black:#0A0A0A; --alert:#FF5C5C;
   --font:'Albert Sans',-apple-system,'Helvetica Neue',Arial,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -30,7 +30,7 @@ button:focus-visible{outline:2px solid var(--bright); outline-offset:2px}
 .p-body.center{justify-content:center; text-align:center; gap:22px}
 .cashbar{position:sticky; top:0; z-index:5; background:var(--deep); border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:baseline}
 .cash{font-weight:900; font-style:italic; font-size:1.7rem; letter-spacing:-0.03em; color:var(--bright); font-variant-numeric:tabular-nums}
-.cash.low{color:var(--mist)}
+.cash.low{color:var(--alert)}
 .cat h3{font-weight:800; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--fog); margin-bottom:8px}
 .opts{display:flex; flex-direction:column; gap:8px}
 .opt{display:flex; justify-content:space-between; align-items:center; gap:10px; text-align:left;
@@ -128,3 +128,16 @@ button:focus-visible{outline:2px solid var(--bright); outline-offset:2px}
 .lockedmsg{display:flex; flex-direction:column; gap:8px; align-items:center; text-align:center; padding:14px;
   border:1px solid var(--bright); border-radius:16px; color:var(--bright); font-weight:800}
 .unlock{background:none; border:0; color:var(--fog); font:inherit; font-size:.85rem; text-decoration:underline; cursor:pointer}
+
+/* shortfall reads red */
+.hl.bad{color:var(--alert)}
+
+/* leaderboard */
+.lb{display:flex; flex-direction:column; gap:1cqw; width:70cqw; max-width:70cqw; margin-top:2cqw}
+.lbrow{display:grid; grid-template-columns:6cqw 1fr auto; align-items:center; gap:2cqw;
+  background:var(--deep); border-radius:1.4cqw; padding:1.4cqw 2.4cqw}
+.lbrow .rank{font-weight:900; font-style:italic; color:var(--fog); font-size:2.4cqw}
+.lbrow .name{font-weight:800; color:var(--mist); font-size:2.6cqw; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.lbrow .nw{font-weight:900; font-style:italic; color:var(--bright); font-size:2.6cqw; font-variant-numeric:tabular-nums}
+.lbrow.top{background:#00250E; outline:2px solid var(--bright)}
+.lbrow.top .rank{color:var(--bright)}

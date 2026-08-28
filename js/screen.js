@@ -2,7 +2,7 @@
 (function () {
   const G = GAME, fmt = G.fmt;
   const stage = document.getElementById('stage');
-  let agg = null;
+  let agg = null, board = null;
 
   /* bar scale ceilings so averages read proportionally */
   const MAX = { car: 70000, shopping: 17000, housing: 48000, vacation: 25000, veh: 20000 };
@@ -67,7 +67,7 @@
       return '<div class="slide black">'
         + '<div class="s-hero"><span class="hl">' + cant + ' of ' + all + '</span><br>of you can\'t<br>cover it.</div>'
         + '<div class="s-sub">' + (phase === 'cover' ? 'Find the money. It has to come from somewhere.' : 'Check your phone. That number is yours.') + '</div>'
-        + (phase === 'cover' ? ticker('Nothing sells back for what you paid' + clock()) : '') + '</div>';
+        + (phase === 'cover' ? ticker('Nothing sells back for what you paid' + lockedIn() + clock()) : '') + '</div>';
     }
 
     if (phase === 'r4tax') return '<div class="slide">'
@@ -82,6 +82,20 @@
         + '<div class="s-hero" style="font-size:6cqw">Taxes paid.<br><span class="hl">All yours.</span></div>'
         + '<div class="s-sub">Average cash still in hand: ' + fmt(num(r.cash)) + '</div>'
         + ticker((phase === 'r4save' ? 'Future you first' : 'Spend what\'s actually yours') + lockedIn() + clock()) + '</div>';
+    }
+
+    if (phase === 'board') {
+      const rows = board || [];
+      return '<div class="slide">'
+        + '<div class="eyebrow">Final standings · net worth</div>'
+        + '<div class="s-hero" style="font-size:5cqw">Leaderboard</div>'
+        + '<div class="lb">'
+        + (rows.length
+          ? rows.map((r2, i) => '<div class="lbrow' + (i === 0 ? ' top' : '') + '">'
+              + '<span class="rank">' + (i + 1) + '</span><span class="name">' + esc(r2.name) + '</span>'
+              + '<span class="nw">' + fmt(num(r2.nw)) + '</span></div>').join('')
+          : '<div class="s-sub">Tallying the room...</div>')
+        + '</div></div>';
     }
 
     if (phase === 'recap') {
@@ -121,6 +135,10 @@
       const { data, error } = await sb.rpc('get_aggregates', { p_code: SESSION_CODE });
       if (error) throw error;
       agg = data;
+      if (Conn.session && Conn.session.phase === 'board') {
+        const lb = await sb.rpc('get_leaderboard', { p_code: SESSION_CODE });
+        if (!lb.error) board = lb.data;
+      }
       render(true);
     } catch (e) { /* connState banner covers it */ }
   }

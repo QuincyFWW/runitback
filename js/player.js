@@ -71,16 +71,16 @@
   window.pickCover = (k) => { S.cover[k] = !S.cover[k]; persist(); scheduleWrite(); render(); };
   window.pick4s = (k, v) => { S.run2.save[k] = S.run2.save[k] === v ? 0 : v; persist(); scheduleWrite(); render(); };
   window.pick4 = (k, v) => { S.run2.spend[k] = S.run2.spend[k] === v ? 0 : v; persist(); scheduleWrite(); render(); };
-  window.lockIn = (yes) => {
-    if (!Conn.session) return;
-    S.locked[Conn.session.phase] = yes;
+  /* locking is final: no unlock, the round is done for you */
+  window.lockIn = () => {
+    if (!Conn.session || S.locked[Conn.session.phase]) return;
+    S.locked[Conn.session.phase] = true;
     persist(); scheduleWrite(); render();
   };
   const isLocked = phase => !!S.locked[phase];
   const lockBtn = phase => isLocked(phase)
-    ? '<div class="lockedmsg">Locked in. Eyes up front.'
-      + '<button class="unlock" onclick="lockIn(false)">Change my answers</button></div>'
-    : '<button class="lockbtn" onclick="lockIn(true)">LOCK IN MY ANSWERS</button>';
+    ? '<div class="lockedmsg">Locked in. Eyes up front.</div>'
+    : '<button class="lockbtn" onclick="lockIn()">LOCK IN MY ANSWERS</button>';
 
   /* ---- render ---- */
   function head() {
@@ -116,7 +116,7 @@
 
     if (phase === 'r2') return '<div class="p-body">' + cashbar('You have left', G.cash1(S.run1))
       + '<div class="eyebrow">What about future you?</div>'
-      + G.VEHICLES.map(v => '<div class="veh"><h4>' + v.label + '</h4><p>' + v.sub + '</p><div class="chips">'
+      + G.VEHICLES.map(v => '<div class="veh"><h4>' + v.label + '</h4><div class="chips">'
         + v.chips.map(val => '<button class="chip" aria-pressed="' + (S.run1.save[v.key] === val) + '"'
           + (isLocked('r2') || (val > 0 && val > G.cash1(S.run1) + S.run1.save[v.key]) ? ' disabled' : '')
           + ' onclick="pick2(\'' + v.key + '\',' + val + ')">' + fmt(val) + '</button>').join('')
@@ -142,7 +142,7 @@
         + '<div class="taxline total"><span>Cash on hand</span><span>' + fmt(c) + '</span></div>'
         + '<div class="taxline total"><span>Tax bill</span><span>-' + fmt(G.TAX) + '</span></div></div>'
         + (short > 0
-          ? '<div class="p-hero">You\'re<br><span class="hl">' + fmt(short) + '</span><br>short.</div>'
+          ? '<div class="p-hero">You\'re<br><span class="hl bad">' + fmt(short) + '</span><br>short.</div>'
           : '<div class="p-hero">You can<br><span class="hl">cover it.</span></div>'
             + '<p class="p-sub">' + fmt(c - G.TAX) + ' left after the bill. Most of the room can\'t say that.</p>')
         + '</div>';
@@ -152,20 +152,25 @@
       const short = G.shortfall(S.run1);
       if (short === 0) return '<div class="p-body center">'
         + '<div class="p-hero">You\'re<br><span class="hl">covered.</span></div>'
-        + '<p class="p-sub">You kept enough cash to pay the bill. Watch the room figure it out.</p></div>';
+        + '<p class="p-sub">You kept enough cash to pay the bill. Watch the room figure it out.</p>'
+        + lockBtn('cover') + '</div>';
       const still = G.coverStillShort(S.run1, S.cover);
+      const clk = isLocked('cover') ? ' disabled' : '';
       return '<div class="p-body">'
         + '<div class="cashbar"><span class="eyebrow">' + (still > 0 ? 'Still short' : 'Bill covered') + '</span>'
         + '<span class="cash ' + (still > 0 ? 'low' : '') + '">' + (still > 0 ? fmt(still) : '✓') + '</span></div>'
         + '<div class="p-hero" style="font-size:1.9rem">Where does the ' + fmt(short) + ' come from?</div>'
         + '<div class="opts">'
-        + G.coverSources(S.run1).map(([k, t, v]) => '<button class="opt" aria-pressed="' + !!S.cover[k] + '"'
+        + G.coverSources(S.run1).map(([k, t, v]) => '<button class="opt" aria-pressed="' + !!S.cover[k] + '"' + clk
           + ' onclick="pickCover(\'' + k + '\')"><span>' + t + '</span><span class="price">' + fmt(v) + '</span></button>').join('')
         + Object.keys(G.SUNK).map(k => S.run1.spend[k]
           ? '<button class="opt" disabled><span>' + G.SUNK[k] + '</span><span class="price">$0</span></button>' : '').join('')
-        + '<button class="opt" aria-pressed="' + !!S.cover.borrow + '" onclick="pickCover(\'borrow\')"><span>Credit card or borrow the rest</span></button>'
-        + '<button class="opt" aria-pressed="' + !!S.cover.family + '" onclick="pickCover(\'family\')"><span>Ask family</span></button>'
-        + '</div><p class="fineprint" style="margin:0">Notice the prices. Nothing sells back for what you paid.</p></div>';
+        + '<button class="opt" aria-pressed="' + !!S.cover.borrow + '"' + clk + ' onclick="pickCover(\'borrow\')"><span>Credit card or borrow the rest</span></button>'
+        /* the family number stays a mystery until they actually ask */
+        + '<button class="opt" aria-pressed="' + !!S.cover.family + '"' + clk + ' onclick="pickCover(\'family\')"><span>Ask family</span>'
+        + (S.cover.family ? '<span class="price">' + fmt(G.FAMILY_HELP) + '</span>' : '') + '</button>'
+        + '</div>' + lockBtn('cover')
+        + '<p class="fineprint" style="margin:0">Notice the prices. Nothing sells back for what you paid.</p></div>';
     }
 
     if (phase === 'r4tax') return '<div class="p-body center">'
@@ -200,13 +205,13 @@
         + '<div class="recap">'
         + '<div class="runcard"><h4>Run 1</h4>'
         + '<div class="row"><span>Your stuff, today</span><span>' + fmt(G.assets(S.run1)) + '</span></div>'
-        + '<div class="row"><span>Put away</span><span>' + fmt(G.saved(S.run1)) + '</span></div>'
+        + '<div class="row"><span>Put away, grown</span><span>' + fmt(G.grownSaved(S.run1)) + '</span></div>'
         + '<div class="row"><span>Cash after taxes</span><span>' + fmt(G.cash1(S.run1) - G.TAX) + '</span></div>'
         + '<div class="stamp ' + (nw1 < nw2 ? 'bad' : 'good') + '" style="font-size:1.15rem">' + fmt(nw1) + '</div>'
         + '<div class="row"><span>April</span><span>' + (short > 0 ? fmt(short) + ' short' : 'Covered') + '</span></div></div>'
         + '<div class="runcard win"><h4>Run 2</h4>'
         + '<div class="row"><span>Your stuff, today</span><span>' + fmt(G.assets(S.run2)) + '</span></div>'
-        + '<div class="row"><span>Put away</span><span>' + fmt(G.saved(S.run2)) + '</span></div>'
+        + '<div class="row"><span>Put away, grown</span><span>' + fmt(G.grownSaved(S.run2)) + '</span></div>'
         + '<div class="row"><span>Cash, taxes paid</span><span>' + fmt(G.cash2(S.run2)) + '</span></div>'
         + '<div class="stamp good" style="font-size:1.15rem">' + fmt(nw2) + '</div>'
         + '<div class="row"><span>April</span><span>Already handled</span></div></div></div>'
@@ -214,8 +219,14 @@
         + '<div class="eyebrow" style="margin-bottom:8px">The whole lesson</div>'
         + '<div class="p-hero" style="font-size:1.6rem">Spending isn\'t the problem.</div>'
         + '<p class="p-sub" style="margin-top:8px">Spending money you haven\'t accounted for is.</p></div>'
-        + '<p class="fineprint" style="text-align:center">Education, not financial advice. First name only, nothing else about you is collected.</p></div>';
+        + '<p class="fineprint" style="text-align:center">Growth uses long-run average rates (savings 4%, market 10%). Averages, not guarantees. Education, not financial advice. First name only, nothing else about you is collected.</p></div>';
     }
+
+    if (phase === 'board') return '<div class="p-body center">'
+      + '<div class="p-hero">Look<br><span class="hl">up.</span></div>'
+      + '<div><div class="eyebrow">Your net worth</div>'
+      + '<div class="bignum">' + fmt(G.netWorth2(S.run2)) + '</div></div></div>';
+
     return '<div class="p-body center"><p class="p-sub">One second...</p></div>';
   }
 
