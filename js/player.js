@@ -7,7 +7,8 @@
   /* ---- identity + local state (refresh = full recovery) ---- */
   const pid = localStorage.getItem('rib_pid') || crypto.randomUUID();
   localStorage.setItem('rib_pid', pid);
-  const stateKey = 'rib_state_' + SESSION_CODE;
+  /* v2: menu prices changed 8/28; versioning orphans any stale pre-change state */
+  const stateKey = 'rib_state_v2_' + SESSION_CODE;
   let S;
   try { S = JSON.parse(localStorage.getItem(stateKey)) || null; } catch (e) { S = null; }
   if (!S) S = { run1: G.emptyRun(), run2: G.emptyRun(), cover: {}, joinedPhase: null };
