@@ -4,19 +4,20 @@
   const fmt = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
 
   const MENU = [
-    { key: 'car', label: 'The Car', opts: [['Keep what you have', 0], ['Used upgrade', 20000], ['Nice new car', 40000], ['Go crazy', 70000]] },
-    { key: 'shopping', label: 'Shopping', opts: [['Nothing', 0], ['Small spree', 2000], ['Upgrade the wardrobe', 7000], ['Go nuts', 15000]] },
-    { key: 'housing', label: 'Housing', opts: [['Keep your setup', 0], ['New furniture', 5000], ['Better apartment', 10000]] },
-    { key: 'vacation', label: 'Vacation', opts: [['Stay home', 0], ['Weekend trip', 2000], ['Big vacation', 7000], ['Luxury trip', 15000]] },
+    { key: 'car', label: 'The Car', opts: [['No car', 0], ['Beater car', 10000], ['Used upgrade', 25000], ['New car', 40000], ['Luxury car', 70000]] },
+    { key: 'shopping', label: 'Shopping', opts: [['No drip. Team issued gear', 0], ['Small spree', 2000], ['Medium spree', 5000], ['Large spree', 10000], ['Designer only', 17000]] },
+    { key: 'housing', label: 'Housing, for the year', opts: [['Live at home', 0], ['Shared apartment', 12000], ['Solo place', 25000], ['Downtown penthouse', 48000]] },
+    { key: 'vacation', label: 'Vacation', opts: [['Stay home', 0], ['Weekend trip', 2000], ['Big vacation', 7000], ['Month-long trip', 15000], ['Take the PJ', 25000]] },
   ];
   const VEHICLES = [
-    { key: 'hysa', label: 'Savings', sub: 'Safe. There when you need it.' },
-    { key: 'sp500', label: 'Investing (S&P 500)', sub: 'A piece of the 500 biggest US companies. Built to grow over years.' },
-    { key: 'roth', label: 'Roth IRA', sub: 'Retirement money. Goes in now, comes out tax-free later.' },
+    { key: 'hysa', label: 'Savings', sub: 'Safe. There when you need it.', chips: [0, 5000, 10000, 20000] },
+    { key: 'sp500', label: 'Investing (S&P 500)', sub: 'A piece of the 500 biggest US companies. Built to grow over years.', chips: [0, 5000, 10000, 20000] },
+    { key: 'roth', label: 'Roth IRA', sub: 'Retirement money. Goes in now, comes out tax-free later. Capped at $7,000 a year.', chips: [0, 3500, 7000] },
   ];
   const CHIP_VALUES = [0, 5000, 10000, 20000];
-  /* sell-back rates when covering the bill; Roth early pull keeps 80% (penalty + taxes) */
-  const DEP = { car: .6, housing: .5, shopping: .3, vacation: 0 };
+  /* sell-back rates when covering the bill; rent and the trip are already spent.
+     Roth early pull keeps 80% (penalty + taxes) */
+  const DEP = { car: .6, housing: 0, shopping: .3, vacation: 0 };
   const ROTH_KEEP = .8;
   const DISCLAIMER = 'For this game only. Real tax obligations vary based on your income, location, deductions and individual circumstances.';
 
@@ -32,7 +33,6 @@
     { id: 'r4tax', label: 'Run It Back: Taxes First', seconds: 0 },
     { id: 'r4save', label: 'Run It Back: Future You', seconds: 60 },
     { id: 'r4spend', label: 'Run It Back: Spend It', seconds: 90 },
-    { id: 'flip', label: 'The Flip', seconds: 0 },
     { id: 'recap', label: 'Recap: Net Worth', seconds: 0 },
   ];
   /* phases in which the phone writes a choices row, and which run object feeds it */
@@ -48,7 +48,9 @@
   const netWorth2 = run2 => assets(run2) + saved(run2) + cash2(run2);
   const shortfall = run1 => Math.max(0, TAX - cash1(run1));
 
-  const CAT_SELL = { car: 'the car', housing: 'the furniture and setup', shopping: 'the clothes', vacation: 'the trip' };
+  const CAT_SELL = { car: 'the car', housing: 'the place', shopping: 'the clothes', vacation: 'the trip' };
+  /* categories that raise nothing when sold back, with the line the phone shows */
+  const SUNK = { housing: 'The rent is spent. Nobody buys it back', vacation: 'Sell the trip. Already lived it' };
   /* everything a short player can raise cash from: [key, label, amount raised] */
   function coverSources(run1) {
     const s = [];
@@ -70,7 +72,7 @@
   }
 
   const G = {
-    START, TAX, fmt, MENU, VEHICLES, CHIP_VALUES, DEP, ROTH_KEEP, DISCLAIMER,
+    START, TAX, fmt, MENU, VEHICLES, CHIP_VALUES, DEP, ROTH_KEEP, DISCLAIMER, SUNK,
     PHASES, WRITE_PHASES, emptyRun, spent, saved, cash1, cash2, assets,
     netWorth1, netWorth2, shortfall, coverSources, coverStillShort,
   };

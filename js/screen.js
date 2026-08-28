@@ -5,7 +5,7 @@
   let agg = null;
 
   /* bar scale ceilings so averages read proportionally */
-  const MAX = { car: 70000, shopping: 15000, housing: 10000, vacation: 15000, veh: 20000 };
+  const MAX = { car: 70000, shopping: 17000, housing: 48000, vacation: 25000, veh: 20000 };
   const pct = (v, m) => Math.min(100, Math.round((v || 0) / m * 100));
   const num = v => (v === null || v === undefined) ? 0 : Number(v);
 
@@ -18,6 +18,12 @@
     const t = Conn.countdownText();
     return t === null ? '' : ' · ' + t + ' left';
   }
+  function lockedIn() {
+    if (!agg) return '';
+    const n = num(agg.players), l = num(agg.locked);
+    return n ? ' · Locked in: ' + l + ' of ' + n : '';
+  }
+  const esc = s => String(s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
 
   function slide(phase) {
     const players = agg ? num(agg.players) : 0;
@@ -35,7 +41,7 @@
         + aggRow('Shopping', pct(r.shopping, MAX.shopping), fmt(num(r.shopping)), false)
         + aggRow('Housing', pct(r.housing, MAX.housing), fmt(num(r.housing)), false)
         + aggRow('Trips', pct(r.vacation, MAX.vacation), fmt(num(r.vacation)), false)
-        + '</div>' + ticker('Average total spent: ' + fmt(num(r.total)) + ' of $100,000' + clock()) + '</div>';
+        + '</div>' + ticker('Average total spent: ' + fmt(num(r.total)) + ' of $100,000' + lockedIn() + clock()) + '</div>';
     }
 
     if (phase === 'r2') {
@@ -46,7 +52,7 @@
         + aggRow('Investing', pct(r.sp500, MAX.veh), fmt(num(r.sp500)), false)
         + aggRow('Roth IRA', pct(r.roth, MAX.veh), fmt(num(r.roth)), false)
         + aggRow('Put away $0', pct(num(r.zero), Math.max(1, num(r.n))) , num(r.zero) + ' of ' + num(r.n), true)
-        + '</div>' + ticker('Round 2' + clock()) + '</div>';
+        + '</div>' + ticker('Future you' + lockedIn() + clock()) + '</div>';
     }
 
     if (phase === 'april') return '<div class="slide black"><div class="s-hero pulse">April<br>arrives.</div></div>';
@@ -75,22 +81,20 @@
         + '<div class="eyebrow">Run two, live</div>'
         + '<div class="s-hero" style="font-size:6cqw">Taxes paid.<br><span class="hl">All yours.</span></div>'
         + '<div class="s-sub">Average cash still in hand: ' + fmt(num(r.cash)) + '</div>'
-        + ticker((phase === 'r4save' ? 'Future you first' : 'Spend what\'s actually yours') + clock()) + '</div>';
+        + ticker((phase === 'r4save' ? 'Future you first' : 'Spend what\'s actually yours') + lockedIn() + clock()) + '</div>';
     }
 
-    if (phase === 'flip') return '<div class="slide"><div class="flip">'
-      + '<div class="fliplist dim"><h5>How most people think</h5><ol>'
-      + '<li>Earn</li><li>Spend</li><li>Save + invest</li><li class="late">Oh yeah... taxes</li></ol></div>'
-      + '<div class="fliparrow">→</div>'
-      + '<div class="fliplist"><h5>Think in reverse</h5><ol>'
-      + '<li>Taxes <small>What isn\'t mine?</small></li>'
-      + '<li>Save + invest <small>What do I want to keep?</small></li>'
-      + '<li>Spend <small>What\'s actually mine to enjoy?</small></li></ol></div></div></div>';
-
-    if (phase === 'recap') return '<div class="slide">'
-      + '<div class="s-hero" style="font-size:6.5cqw">Spending isn\'t<br>the problem.</div>'
-      + '<div class="s-sub" style="font-size:2.8cqw;color:var(--mist)">Spending money you haven\'t accounted for is.</div>'
-      + '<div class="eyebrow" style="margin-top:2cqw">Final Whistle Wealth</div></div>';
+    if (phase === 'recap') {
+      const w = Conn.winner;
+      return '<div class="slide">'
+        + '<div class="s-hero" style="font-size:6.5cqw">Spending isn\'t<br>the problem.</div>'
+        + '<div class="s-sub" style="font-size:2.8cqw;color:var(--mist)">Spending money you haven\'t accounted for is.</div>'
+        + (w && w.name
+          ? '<div class="s-sub" style="margin-top:2cqw"><span class="eyebrow">Covered the bill · drawn from the room</span><br>'
+            + '<span class="hl" style="font-size:5cqw;font-weight:900;font-style:italic">' + esc(w.name) + '</span></div>'
+          : '')
+        + '<div class="eyebrow" style="margin-top:2cqw">Final Whistle Wealth</div></div>';
+    }
 
     return '<div class="slide"><div class="s-sub">...</div></div>';
   }
@@ -136,5 +140,6 @@
   };
 
   Conn.onPhase(() => render(false));
+  Conn.onWinner(() => render(true));
   Conn.start();
 })();

@@ -40,11 +40,11 @@
     if (i >= 0 && i < G.PHASES.length - 1) goTo(G.PHASES[i + 1].id);
   };
 
-  let players = 0;
+  let players = 0, locked = 0;
   async function pollPlayers() {
     try {
       const { data } = await sb.rpc('get_aggregates', { p_code: SESSION_CODE });
-      if (data) { players = data.players || 0; renderStat(); }
+      if (data) { players = data.players || 0; locked = data.locked || 0; renderStat(); }
     } catch (e) {}
   }
   setInterval(pollPlayers, 5000);
@@ -52,8 +52,24 @@
 
   function renderStat() {
     const el = document.getElementById('stat');
-    if (el) el.innerHTML = '<span class="eyebrow">' + SESSION_CODE + ' · phones in</span><b>' + players + '</b>';
+    if (el) el.innerHTML = '<span class="eyebrow">' + SESSION_CODE + ' · phones in · locked ' + locked + '</span><b>' + players + '</b>';
   }
+
+  /* winner draw: random first name among players who covered the tax bill in run 1 */
+  window.drawWinner = async function () {
+    if (busy) return;
+    busy = true; msg = 'Drawing...'; render();
+    try {
+      const { data, error } = await sb.rpc('draw_winner', { p_code: SESSION_CODE, p_key: KEY });
+      if (error) throw error;
+      if (!data || !data.name) { msg = 'No qualifiers with a name yet (' + (data ? data.qualifiers : 0) + ' covered)'; }
+      else {
+        msg = 'WINNER: ' + data.name + ' (' + data.qualifiers + ' covered the bill)';
+        Conn.channel.send({ type: 'broadcast', event: 'winner', payload: { name: data.name } });
+      }
+    } catch (e) { msg = 'FAILED: ' + (e.message || 'no connection'); }
+    busy = false; render();
+  };
 
   function render() {
     const cur = Conn.session ? Conn.session.phase : '...';
@@ -67,7 +83,10 @@
       + '<div class="phaselist">'
       + G.PHASES.map(p => '<button class="phasebtn' + (p.id === cur ? ' current' : '') + '" onclick="goTo(\'' + p.id + '\')">'
         + '<span>' + p.label + '</span><span class="tag">' + (p.id === cur ? 'LIVE' : (p.seconds ? p.seconds + 's' : '')) + '</span></button>').join('')
-      + '</div></div>';
+      + '</div>'
+      + '<button class="phasebtn" style="margin-top:14px" onclick="drawWinner()" ' + (busy ? 'disabled' : '') + '>'
+      + '<span>Draw a winner (covered the bill)</span><span class="tag">PRIZE</span></button>'
+      + '</div>';
     renderStat();
   }
 

@@ -117,3 +117,14 @@ button:focus-visible{outline:2px solid var(--bright); outline-offset:2px}
   .p-body>*, .slide{animation:rise .35s ease both}
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 }
+
+/* name capture + lock-in */
+.namebox{display:flex; flex-direction:column; gap:10px; width:100%; max-width:300px; margin:6px auto; text-align:left}
+.namebox input{background:#00250E; border:1px solid var(--storm); border-radius:14px; padding:14px 16px;
+  color:var(--mist); font:inherit; font-size:1.05rem}
+.namebox input:focus{outline:2px solid var(--bright); outline-offset:2px; border-color:var(--bright)}
+.lockbtn{width:100%; padding:16px; border-radius:16px; border:0; background:var(--bright); color:var(--midnight);
+  font:inherit; font-weight:900; font-style:italic; font-size:1.05rem; letter-spacing:-0.02em; cursor:pointer}
+.lockedmsg{display:flex; flex-direction:column; gap:8px; align-items:center; text-align:center; padding:14px;
+  border:1px solid var(--bright); border-radius:16px; color:var(--bright); font-weight:800}
+.unlock{background:none; border:0; color:var(--fog); font:inherit; font-size:.85rem; text-decoration:underline; cursor:pointer}

@@ -7,46 +7,56 @@ assert.equal(G.cash1(r), 100000);
 assert.equal(G.shortfall(r), 0);
 assert.equal(G.netWorth1(r), 70000);
 
-// big spender: 70k car, 15k shopping, 10k housing, 15k vacation = 110k > 100k is impossible
-// realistic overspend: 70k car + 15k vacation + 10k housing = 95k spent, 0 saved
+// big spender: 70k car + 25k penthouse + 15k vacation = 110k spent, 0 saved -> negative cash
 const o = G.emptyRun();
-o.spend = { car: 70000, shopping: 0, housing: 10000, vacation: 15000 };
-assert.equal(G.spent(o), 95000);
-assert.equal(G.cash1(o), 5000);
-assert.equal(G.shortfall(o), 25000);
-// assets: car 42000 + housing 5000 + vacation 0 = 47000
-assert.equal(G.assets(o), 47000);
-// net worth: 47000 + 0 saved + 5000 cash - 30000 tax = 22000
-assert.equal(G.netWorth1(o), 22000);
+o.spend = { car: 70000, shopping: 0, housing: 25000, vacation: 15000 };
+assert.equal(G.spent(o), 110000);
+assert.equal(G.cash1(o), -10000);
+assert.equal(G.shortfall(o), 40000);
+// assets: car 42000 + housing 0 (rent) + vacation 0 = 42000
+assert.equal(G.assets(o), 42000);
+// net worth: 42000 + 0 saved - 10000 cash - 30000 tax = 2000
+assert.equal(G.netWorth1(o), 2000);
 
-// cover sources for the overspender: car sells for 42000, housing 2500 wait .5*10000=5000
+// cover sources: only the car raises money; rent and the trip are sunk
 const src = G.coverSources(o);
 const byKey = Object.fromEntries(src.map(([k, , v]) => [k, v]));
 assert.equal(byKey.car, 42000);
-assert.equal(byKey.housing, 5000);
+assert.equal(byKey.housing, undefined); // rent has no resale
 assert.equal(byKey.vacation, undefined); // the trip has no resale
-// selling the car alone covers the 25000 shortfall
+// selling the car covers the 40000 shortfall
 assert.equal(G.coverStillShort(o, { car: true }), 0);
-assert.equal(G.coverStillShort(o, { housing: true }), 20000);
-assert.equal(G.coverStillShort(o, { housing: true, borrow: true }), 0);
+assert.equal(G.coverStillShort(o, {}), 40000);
+assert.equal(G.coverStillShort(o, { borrow: true }), 0);
 
-// roth early pull keeps 80%
+// roth early pull keeps 80%; roth chips cap at the $7,000 annual limit
 const p = G.emptyRun();
-p.save.roth = 20000;
-assert.equal(Object.fromEntries(G.coverSources(p).map(([k, , v]) => [k, v])).roth, 16000);
+p.save.roth = 7000;
+assert.equal(Object.fromEntries(G.coverSources(p).map(([k, , v]) => [k, v])).roth, 5600);
+const roth = G.VEHICLES.find(v => v.key === 'roth');
+assert.equal(Math.max(...roth.chips), 7000);
 
-// run 2: taxes first, save 20k, spend 29k -> cash2 = 100k-30k-20k-29k = 21000
+// run 2: taxes first, save 20k, spend 39k -> cash2 = 100k-30k-20k-39k = 11000
 const t = G.emptyRun();
 t.save = { hysa: 10000, sp500: 10000, roth: 0 };
-t.spend = { car: 20000, shopping: 7000, housing: 0, vacation: 2000 };
-assert.equal(G.cash2(t), 21000);
-// net worth run2: assets (car 12000 + clothes 2100 + trip 0) + 20000 saved + 21000 cash
-assert.equal(G.assets(t), 12000 + 2100 + 0);
-assert.equal(G.netWorth2(t), 55100);
+t.spend = { car: 25000, shopping: 2000, housing: 12000, vacation: 0 };
+assert.equal(G.cash2(t), 11000);
+// net worth run2: assets (car 15000 + clothes 600 + rent 0) + 20000 saved + 11000 cash
+assert.equal(G.assets(t), 15000 + 600 + 0);
+assert.equal(G.netWorth2(t), 46600);
 
-// phases sanity
+// menu prices match the 8/28 sheet
+const price = (cat, label) => G.MENU.find(c => c.key === cat).opts.find(([t2]) => t2 === label)[1];
+assert.equal(price('car', 'Beater car'), 10000);
+assert.equal(price('car', 'Luxury car'), 70000);
+assert.equal(price('shopping', 'Designer only'), 17000);
+assert.equal(price('housing', 'Downtown penthouse'), 48000);
+assert.equal(price('vacation', 'Take the PJ'), 25000);
+
+// phases sanity: flip is gone, recap closes the show
 assert.equal(G.PHASES[0].id, 'lobby');
 assert.equal(G.PHASES[G.PHASES.length - 1].id, 'recap');
+assert.ok(!G.PHASES.some(ph => ph.id === 'flip'));
 assert.deepEqual(G.WRITE_PHASES, ['r1', 'r2', 'cover', 'r4save', 'r4spend']);
 
 console.log('game.test.js: all assertions passed');

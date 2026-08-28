@@ -5,7 +5,9 @@ const SESSION_CODE = new URLSearchParams(location.search).get('s') || RIB.DEFAUL
 
 const Conn = {
   session: null, failedPolls: 0, offsetMs: 0, channel: null, listeners: [],
+  winner: null, winnerListeners: [],
   onPhase(fn) { this.listeners.push(fn); },
+  onWinner(fn) { this.winnerListeners.push(fn); },
   emit() { this.listeners.forEach(f => { try { f(this.session); } catch (e) { console.error(e); } }); },
 
   async syncClock() {
@@ -47,6 +49,10 @@ const Conn = {
       this.failedPolls = 0;
       this.connState(true);
       this.emit();
+    });
+    this.channel.on('broadcast', { event: 'winner' }, ({ payload }) => {
+      this.winner = payload;
+      this.winnerListeners.forEach(f => { try { f(payload); } catch (e) { console.error(e); } });
     });
     this.channel.subscribe();
     /* screen lock and dead WiFi are the real gameday killers: recover hard on wake */
