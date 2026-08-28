@@ -55,7 +55,17 @@ const num = v => (v === null || v === undefined) ? 0 : Number(v);
 
   const header = 'rank,name,signed_contract,run1_spent,run1_put_away,run1_cash_at_april,run1_tax_shortfall,run1_net_worth,run2_spent,run2_put_away,run2_cash,run2_net_worth,net_worth_change';
   const lines = rows.map((r, i) => [i + 1, r.name, r.signed ? 'yes' : 'no', r.spent1, r.saved1, r.cash1, r.short, r.nw1, r.spent2, r.saved2, r.cash2, r.nw2, r.diff].join(','));
-  fs.writeFileSync(OUT, header + '\n' + lines.join('\n') + '\n');
+
+  /* Quincy's standard macro footer (8/28): column averages across every player,
+     shown as dollars, under his labels. Keep the labels and layout exactly. */
+  const mean = f => rows.reduce((a, r) => a + f(r), 0) / Math.max(1, rows.length);
+  const usd = v => '"$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '"';
+  const macroLabels = ',,,1st round spent,1st round saved,1st Round before taxes,Amount short after taxes,Average net worth,2nd round spent,2nd round saved,2nd Round cash,Round 2 Average net worth,Average change';
+  const macroValues = ',,,' + [
+    mean(r => r.spent1), mean(r => r.saved1), mean(r => r.cash1), mean(r => r.short), mean(r => r.nw1),
+    mean(r => r.spent2), mean(r => r.saved2), mean(r => r.cash2), mean(r => r.nw2), mean(r => r.diff),
+  ].map(usd).join(',');
+  fs.writeFileSync(OUT, header + '\n' + lines.join('\n') + '\n\n' + macroLabels + '\n' + macroValues + '\n');
 
   const n = rows.length;
   const avg = f => Math.round(rows.reduce((a, r) => a + f(r), 0) / Math.max(1, n));
