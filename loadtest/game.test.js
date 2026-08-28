@@ -66,6 +66,12 @@ assert.equal(price('vacation', 'Take the PJ'), 25000);
 assert.equal(G.PHASES[0].id, 'lobby');
 assert.equal(G.PHASES[G.PHASES.length - 1].id, 'board');
 assert.ok(!G.PHASES.some(ph => ph.id === 'flip'));
-assert.deepEqual(G.WRITE_PHASES, ['r1', 'r2', 'cover', 'r4save', 'r4spend']);
+assert.equal(G.PHASES[1].id, 'contract');
+assert.ok(G.CONTRACT.some(([, b]) => b.includes('natural life'))); // the buried clause
+assert.deepEqual(G.WRITE_PHASES, ['contract', 'r1', 'r2', 'cover', 'r4save', 'r4spend']);
+// housing shows monthly, charges yearly
+const hz = G.MENU.find(c => c.key === 'housing').opts.find(([t2]) => t2 === 'Shared apartment');
+assert.equal(hz[1], 12000);
+assert.equal(hz[2], '$1,000/mo');
 
 console.log('game.test.js: all assertions passed');

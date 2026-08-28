@@ -55,6 +55,7 @@
     dirty = false; writing = true;
     const row = { session_id: Conn.session.id, player_id: pid, round: phase, updated_at: new Date().toISOString() };
     const lk = !!S.locked[phase];
+    if (phase === 'contract') { row.payload = { signed: lk, locked: lk }; row.cash_left = G.START; }
     if (phase === 'r1') { row.payload = { ...S.run1.spend, locked: lk }; row.cash_left = G.cash1(S.run1); }
     if (phase === 'r2') { row.payload = { ...S.run1.save, locked: lk }; row.cash_left = G.cash1(S.run1); }
     if (phase === 'cover') { row.payload = { sources: S.cover, locked: lk }; row.cash_left = G.cash1(S.run1); }
@@ -97,7 +98,7 @@
   function body(phase) {
     if (phase === 'lobby') return '<div class="p-body center">'
       + '<div class="eyebrow">Final Whistle Wealth presents</div>'
-      + '<div class="p-hero">You just made<br><span class="hl">$100,000</span><br>from an NIL deal.</div>'
+      + '<div class="p-hero">You just signed<br>a 1-year NIL deal:<br><span class="hl">$100,000.</span></div>'
       + '<p class="p-sub">Figure out what happens to it.</p>'
       + (S.name
         ? '<p class="p-sub">You\'re in, <b>' + esc(S.name) + '</b>. The game starts up front.</p>'
@@ -106,12 +107,30 @@
           + '<button class="lockbtn" onclick="saveName()">I\'M IN</button></div>')
       + '<p class="fineprint">Fictional money, real you. First name only, nothing else about you is collected.</p></div>';
 
+    if (phase === 'contract') {
+      const signed = isLocked('contract');
+      return '<div class="p-body">'
+        + '<div class="eyebrow">Before the money moves: read it</div>'
+        + '<div class="paper">'
+        + G.CONTRACT.map(([h, b], i) => (i === 0
+          ? '<div class="paper-title">' + h + '</div><p>' + b + '</p>'
+          : '<h5>' + h + '</h5><p>' + b + '</p>')).join('')
+        + '<div class="sigblock">'
+        + '<div class="sigline">' + (S.name ? esc(S.name) : 'Athlete') + '</div>'
+        + '<div class="siglabel">Athlete signature</div>'
+        + (signed
+          ? '<div class="signed">SIGNED ✓</div>'
+          : '<button class="signbtn" onclick="lockIn()">TAP TO SIGN</button>')
+        + '</div></div>'
+        + '<p class="fineprint">Fictional contract for an education game, not a real agreement. Always have a qualified professional read a real one before you sign.</p></div>';
+    }
+
     if (phase === 'r1') return '<div class="p-body">' + lateBadge()
       + '<div class="eyebrow">Spend it how you actually would</div>'
       + G.MENU.map(c => '<div class="cat"><h3>' + c.label + '</h3><div class="opts">'
-        + c.opts.map(([t, v]) => '<button class="opt" aria-pressed="' + (S.run1.spend[c.key] === v) + '"'
+        + c.opts.map(([t, v, d]) => '<button class="opt" aria-pressed="' + (S.run1.spend[c.key] === v) + '"'
           + (isLocked('r1') ? ' disabled' : '')
-          + ' onclick="pick1(\'' + c.key + '\',' + v + ')"><span>' + t + '</span><span class="price">' + fmt(v) + '</span></button>').join('')
+          + ' onclick="pick1(\'' + c.key + '\',' + v + ')"><span>' + t + '</span><span class="price">' + (d || fmt(v)) + '</span></button>').join('')
         + '</div></div>').join('') + lockBtn('r1') + '</div>';
 
     if (phase === 'r2') return '<div class="p-body">' + cashbar('You have left', G.cash1(S.run1))
@@ -192,9 +211,9 @@
     if (phase === 'r4spend') return '<div class="p-body">' + cashbar('You have left', G.cash2(S.run2))
       + '<div class="eyebrow">Now do whatever you want with it</div>'
       + G.MENU.map(c => '<div class="cat"><h3>' + c.label + '</h3><div class="opts">'
-        + c.opts.map(([t, v]) => '<button class="opt" aria-pressed="' + (S.run2.spend[c.key] === v) + '"'
+        + c.opts.map(([t, v, d]) => '<button class="opt" aria-pressed="' + (S.run2.spend[c.key] === v) + '"'
           + (isLocked('r4spend') || (v > 0 && v > G.cash2(S.run2) + S.run2.spend[c.key]) ? ' disabled' : '')
-          + ' onclick="pick4(\'' + c.key + '\',' + v + ')"><span>' + t + '</span><span class="price">' + fmt(v) + '</span></button>').join('')
+          + ' onclick="pick4(\'' + c.key + '\',' + v + ')"><span>' + t + '</span><span class="price">' + (d || fmt(v)) + '</span></button>').join('')
         + '</div></div>').join('') + lockBtn('r4spend') + '</div>';
 
     if (phase === 'recap') {
@@ -224,8 +243,8 @@
 
     if (phase === 'board') return '<div class="p-body center">'
       + '<div class="p-hero">Look<br><span class="hl">up.</span></div>'
-      + '<div><div class="eyebrow">Your net worth</div>'
-      + '<div class="bignum">' + fmt(G.netWorth2(S.run2)) + '</div></div></div>';
+      + '<div><div class="eyebrow">Your round 1 net worth</div>'
+      + '<div class="bignum">' + fmt(G.netWorth1(S.run1)) + '</div></div></div>';
 
     return '<div class="p-body center"><p class="p-sub">One second...</p></div>';
   }
@@ -260,10 +279,9 @@
     if (el && t !== null) el.textContent = t;
   }, 1000);
 
-  /* host reset: keep who you are (id + name), wipe every pick, start over clean */
+  /* host reset: the whole account goes, id and name included. Fresh person, fresh game. */
   Conn.onReset(() => {
-    S = { run1: G.emptyRun(), run2: G.emptyRun(), cover: {}, joinedPhase: 'lobby', locked: {}, name: S.name };
-    persist();
+    try { localStorage.removeItem(stateKey); localStorage.removeItem('rib_pid'); } catch (e) {}
     location.reload();
   });
 

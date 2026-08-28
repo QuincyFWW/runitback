@@ -12,7 +12,7 @@ const N = parseInt(process.argv[2] || '150', 10);
 const G = require('../js/game.js');
 if (!KEY) { console.error('set RIB_LOAD_KEY'); process.exit(1); }
 
-const PHASE_SCHEDULE = ['r1', 'r2', 'april', 'bill', 'verdict', 'cover', 'r4tax', 'r4save', 'r4spend', 'recap', 'board'];
+const PHASE_SCHEDULE = ['contract', 'r1', 'r2', 'april', 'bill', 'verdict', 'cover', 'r4tax', 'r4save', 'r4spend', 'recap', 'board'];
 const PHASE_MS = 12000;
 
 const writeLat = [], writeFail = [];
@@ -34,6 +34,7 @@ function randomPayload(phase) {
     return p;
   }
   if (phase === 'cover') return { sources: { borrow: true } };
+  if (phase === 'contract') return { signed: true, locked: true };
   return null;
 }
 

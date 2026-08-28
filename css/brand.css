@@ -147,3 +147,29 @@ button:focus-visible{outline:2px solid var(--bright); outline-offset:2px}
   background:none; color:var(--alert); font:inherit; font-weight:800; font-size:.95rem; cursor:pointer}
 .resetbtn.armed{background:var(--alert); color:var(--midnight); font-weight:900; font-style:italic; animation:pulse 1s ease-in-out infinite}
 .resetbtn:disabled{opacity:.4}
+
+/* the contract: paper on a dark table */
+.paper{background:#F6F4EC; color:#1A1A14; border-radius:10px; padding:22px 20px 26px;
+  font-family:Georgia, 'Times New Roman', serif; font-size:.86rem; line-height:1.55;
+  box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.paper-title{font-weight:700; font-size:1rem; text-align:center; letter-spacing:.04em;
+  text-transform:uppercase; margin-bottom:10px}
+.paper h5{font-weight:700; font-size:.86rem; margin:14px 0 3px}
+.paper p{margin:0}
+.sigblock{margin-top:22px; padding-top:8px}
+.sigline{border-bottom:1.5px solid #1A1A14; padding:0 4px 4px; font-family:'Snell Roundhand','Brush Script MT',cursive;
+  font-size:1.5rem; min-height:34px}
+.siglabel{font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; margin-top:4px; color:#555}
+.signbtn{width:100%; margin-top:14px; padding:15px; border-radius:10px; border:0; background:#1A1A14; color:#F6F4EC;
+  font:inherit; font-family:inherit; font-weight:700; letter-spacing:.05em; font-size:.95rem; cursor:pointer}
+.signed{margin-top:14px; text-align:center; font-weight:700; letter-spacing:.1em; color:#0A5B2B;
+  border:2px solid #0A5B2B; border-radius:10px; padding:12px}
+
+/* projector: stylized mini contract */
+.s-paper{background:#F6F4EC; color:#1A1A14; border-radius:1cqw; padding:2.4cqw 2.8cqw; width:34cqw; margin-top:1cqw;
+  box-shadow:0 1.5cqw 5cqw rgba(0,0,0,.55); text-align:left}
+.sp-title{font-family:Georgia, serif; font-weight:700; font-size:1.4cqw; letter-spacing:.06em; text-align:center; margin-bottom:1.6cqw}
+.sp-line{height:.55cqw; background:#C9C4B2; border-radius:999px; margin:.9cqw 0}
+.sp-line.w80{width:80%} .sp-line.w60{width:60%} .sp-line.w40{width:40%}
+.sp-sig{margin-top:1.8cqw; border-top:2px solid #1A1A14; padding-top:.8cqw;
+  font-family:Georgia, serif; font-style:italic; font-size:1.3cqw; color:#555}

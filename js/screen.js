@@ -30,8 +30,23 @@
     if (phase === 'lobby') return '<div class="slide">'
       + '<div class="eyebrow">Final Whistle Wealth</div>'
       + '<div class="s-hero" style="font-size:5.5cqw">Grab your phone.<br>Scan in.</div>'
+      + '<div class="s-sub">You just signed a 1-year NIL deal worth $100,000.</div>'
       + '<div class="qrbox"><img src="assets/qr.png?v=1" alt="QR code to join"></div>'
       + '<div class="joincount"><b>' + players + '</b><span>phones in</span></div></div>';
+
+    if (phase === 'contract') {
+      const n = num(agg && agg.players), l = num(agg && agg.locked);
+      return '<div class="slide">'
+        + '<div class="eyebrow">Read before you sign</div>'
+        + '<div class="s-hero" style="font-size:6cqw">Here\'s your<br>contract.</div>'
+        + '<div class="s-paper">'
+        + '<div class="sp-title">NIL ENDORSEMENT AGREEMENT</div>'
+        + '<div class="sp-line w80"></div><div class="sp-line"></div><div class="sp-line w60"></div>'
+        + '<div class="sp-line"></div><div class="sp-line w80"></div><div class="sp-line w40"></div>'
+        + '<div class="sp-sig">Sign on your phone</div>'
+        + '</div>'
+        + ticker('Signed: ' + l + ' of ' + n + clock()) + '</div>';
+    }
 
     if (phase === 'r1') {
       const r = (agg && agg.r1) || {};
@@ -87,7 +102,7 @@
     if (phase === 'board') {
       const rows = board || [];
       return '<div class="slide">'
-        + '<div class="eyebrow">Final standings · net worth</div>'
+        + '<div class="eyebrow">Final standings · round 1 net worth</div>'
         + '<div class="s-hero" style="font-size:5cqw">Leaderboard</div>'
         + '<div class="lb">'
         + (rows.length

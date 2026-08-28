@@ -6,7 +6,9 @@
   const MENU = [
     { key: 'car', label: 'The Car', opts: [['No car', 0], ['Beater car', 10000], ['Used upgrade', 25000], ['New car', 40000], ['Luxury car', 70000]] },
     { key: 'shopping', label: 'Shopping', opts: [['No drip. Team issued gear', 0], ['Small spree', 2000], ['Medium spree', 5000], ['Large spree', 10000], ['Designer only', 17000]] },
-    { key: 'housing', label: 'Housing, for the year', opts: [['Live at home', 0], ['Shared apartment', 12000], ['Solo place', 25000], ['Downtown penthouse', 48000]] },
+    /* housing: the phone shows the monthly rent, the game charges the year.
+       Feeling that gap is the point. opts: [label, yearly cost, shown price] */
+    { key: 'housing', label: 'Housing', opts: [['Live at home', 0, '$0'], ['Shared apartment', 12000, '$1,000/mo'], ['Solo place', 25000, '$2,083/mo'], ['Downtown penthouse', 48000, '$4,000/mo']] },
     { key: 'vacation', label: 'Vacation', opts: [['Stay home', 0], ['Weekend trip', 2000], ['Big vacation', 7000], ['Month-long trip', 15000], ['Take the PJ', 25000]] },
   ];
   /* no explainer subs (8/28): Quincy talks these through live.
@@ -32,6 +34,7 @@
   /* the authoritative phase sequence; seconds drive the cosmetic countdown */
   const PHASES = [
     { id: 'lobby', label: 'Lobby (QR up)', seconds: 0 },
+    { id: 'contract', label: "Here's Your Contract", seconds: 0 },
     { id: 'r1', label: 'Round 1: Spend It', seconds: 90 },
     { id: 'r2', label: 'Round 2: Future You', seconds: 75 },
     { id: 'april', label: 'April Arrives', seconds: 0 },
@@ -45,7 +48,21 @@
     { id: 'board', label: 'Leaderboard', seconds: 0 },
   ];
   /* phases in which the phone writes a choices row, and which run object feeds it */
-  const WRITE_PHASES = ['r1', 'r2', 'cover', 'r4save', 'r4spend'];
+  const WRITE_PHASES = ['contract', 'r1', 'r2', 'cover', 'r4save', 'r4spend'];
+
+  /* the fictional deal they sign before round 1; clause 6(c) is the plant.
+     Rendered as [heading, body] sections on the phone. */
+  const CONTRACT = [
+    ['NIL Endorsement Agreement', 'This one-year Name, Image and Likeness agreement is made between SUMMIT PEAK BEVERAGE CO. ("Company") and the undersigned student-athlete ("Athlete").'],
+    ['1. Term', 'One (1) year from the date of signature below.'],
+    ['2. Compensation', 'Company shall pay Athlete a one-time fee of $100,000, payable in full within five (5) business days of signing.'],
+    ['3. Services', 'Athlete will provide: eight (8) social media posts, two (2) personal appearances, and one (1) photo shoot, scheduled around Athlete\'s team obligations.'],
+    ['4. Exclusivity', 'During the Term, Athlete will not endorse any competing beverage brand.'],
+    ['5. Taxes', 'Athlete is solely responsible for all federal, state and local taxes on the compensation above. Company will not withhold any amount.'],
+    ['6. Rights', '(a) Company may use approved photos of Athlete in campaign materials during the Term. (b) Athlete retains ownership of Athlete\'s social channels. (c) Athlete hereby assigns to Company all of Athlete\'s media, name, image and likeness rights, in perpetuity, for the remainder of Athlete\'s natural life. (d) Company may sublicense the rights in this section.'],
+    ['7. Conduct', 'Athlete agrees to comply with all applicable school, conference and NCAA rules.'],
+    ['8. Miscellaneous', 'This document is the entire agreement between the parties and is governed by the laws of the Commonwealth of Massachusetts.'],
+  ];
 
   const emptyRun = () => ({ spend: { car: 0, shopping: 0, housing: 0, vacation: 0 }, save: { hysa: 0, sp500: 0, roth: 0 } });
   const spent = r => Object.values(r.spend).reduce((a, b) => a + b, 0);
@@ -84,7 +101,7 @@
   }
 
   const G = {
-    START, TAX, fmt, MENU, VEHICLES, CHIP_VALUES, DEP, ROTH_KEEP, FAMILY_HELP, GROWTH, DISCLAIMER, SUNK,
+    START, TAX, fmt, MENU, VEHICLES, CHIP_VALUES, DEP, ROTH_KEEP, FAMILY_HELP, GROWTH, DISCLAIMER, SUNK, CONTRACT,
     PHASES, WRITE_PHASES, emptyRun, spent, saved, grownSaved, cash1, cash2, assets,
     netWorth1, netWorth2, shortfall, coverSources, coverStillShort,
   };
