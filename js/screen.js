@@ -30,7 +30,7 @@
     if (phase === 'lobby') return '<div class="slide">'
       + '<div class="eyebrow">Final Whistle Wealth</div>'
       + '<div class="s-hero" style="font-size:5.5cqw">Grab your phone.<br>Scan in.</div>'
-      + '<div class="s-sub">You just signed a 1-year NIL deal worth $100,000.</div>'
+      + '<div class="s-sub">You just got offered a $100,000 NIL contract.</div>'
       + '<div class="qrbox"><img src="assets/qr.png?v=1" alt="QR code to join"></div>'
       + '<div class="joincount"><b>' + players + '</b><span>phones in</span></div></div>';
 
@@ -82,7 +82,9 @@
       return '<div class="slide black">'
         + '<div class="s-hero"><span class="hl">' + cant + ' of ' + all + '</span><br>of you can\'t<br>cover it.</div>'
         + '<div class="s-sub">' + (phase === 'cover' ? 'Find the money. It has to come from somewhere.' : 'Check your phone. That number is yours.') + '</div>'
-        + (phase === 'cover' ? ticker('Nothing sells back for what you paid' + lockedIn() + clock()) : '') + '</div>';
+        /* covered players don't lock in; count locks against the short group only */
+        + (phase === 'cover' ? ticker('Nothing sells back for what you paid'
+            + (agg ? ' · Locked in: ' + num(agg.locked) + ' of ' + cant + ' short' : '') + clock()) : '') + '</div>';
     }
 
     if (phase === 'r4tax') return '<div class="slide">'

@@ -90,15 +90,16 @@
       + (t !== null ? '<span class="p-timer">' + t + '</span>' : '')
       + '<div class="pill" id="pill"><span class="dot"></span><span id="pilltext">Connected</span></div></div>';
   }
+  /* never tint the cash red on a threshold: that would telegraph the tax bill */
   const cashbar = (label, val) => '<div class="cashbar"><span class="eyebrow">' + label + '</span>'
-    + '<span class="cash ' + (val < G.TAX ? 'low' : '') + '">' + fmt(val) + '</span></div>';
+    + '<span class="cash">' + fmt(val) + '</span></div>';
   const lateBadge = () => (S.joinedPhase && S.joinedPhase !== 'lobby')
     ? '<div class="badge">Joined mid-game. You start with the full $100,000.</div>' : '';
 
   function body(phase) {
     if (phase === 'lobby') return '<div class="p-body center">'
       + '<div class="eyebrow">Final Whistle Wealth presents</div>'
-      + '<div class="p-hero">You just signed<br>a 1-year NIL deal:<br><span class="hl">$100,000.</span></div>'
+      + '<div class="p-hero">You just got<br>offered a<br><span class="hl">$100,000</span><br>NIL contract.</div>'
       + '<p class="p-sub">Figure out what happens to it.</p>'
       + (S.name
         ? '<p class="p-sub">You\'re in, <b>' + esc(S.name) + '</b>. The game starts up front.</p>'
@@ -171,8 +172,7 @@
       const short = G.shortfall(S.run1);
       if (short === 0) return '<div class="p-body center">'
         + '<div class="p-hero">You\'re<br><span class="hl">covered.</span></div>'
-        + '<p class="p-sub">You kept enough cash to pay the bill. Watch the room figure it out.</p>'
-        + lockBtn('cover') + '</div>';
+        + '<p class="p-sub">You kept enough cash to pay the bill. Watch the room figure it out.</p></div>';
       const still = G.coverStillShort(S.run1, S.cover);
       const clk = isLocked('cover') ? ' disabled' : '';
       return '<div class="p-body">'
