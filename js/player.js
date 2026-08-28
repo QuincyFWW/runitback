@@ -279,12 +279,39 @@
     if (el && t !== null) el.textContent = t;
   }, 1000);
 
-  /* host reset: the whole account goes, id and name included. Fresh person, fresh game. */
-  Conn.onReset(() => {
+  /* host reset: the whole account goes, id, name and every answer. Fresh person, fresh game. */
+  function wipeAccount() {
     try { localStorage.removeItem(stateKey); localStorage.removeItem('rib_pid'); } catch (e) {}
     location.reload();
+  }
+  Conn.onReset(() => {
+    try { localStorage.setItem(epochKey, ''); } catch (e) {}
+    wipeAccount();
   });
 
-  Conn.onPhase(() => { register().then(doWrite); render(); });
+  /* epoch check catches phones that slept through the reset broadcast:
+     the session's reset counter moved on without us, so forget everything */
+  const epochKey = 'rib_epoch_' + SESSION_CODE;
+  function staleAfterReset() {
+    const e = Conn.session ? Conn.session.reset_epoch : undefined;
+    if (e === undefined || e === null) return false;
+    let seen = null;
+    try { seen = localStorage.getItem(epochKey); } catch (err) {}
+    if (seen === null || seen === '') {
+      try { localStorage.setItem(epochKey, String(e)); } catch (err) {}
+      return false;
+    }
+    if (seen !== String(e)) {
+      try { localStorage.setItem(epochKey, String(e)); } catch (err) {}
+      wipeAccount();
+      return true;
+    }
+    return false;
+  }
+
+  Conn.onPhase(() => {
+    if (staleAfterReset()) return;
+    register().then(doWrite); render();
+  });
   Conn.start();
 })();
