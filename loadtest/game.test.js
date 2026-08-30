@@ -67,7 +67,7 @@ assert.equal(G.PHASES[0].id, 'lobby');
 assert.equal(G.PHASES[G.PHASES.length - 1].id, 'board');
 assert.ok(!G.PHASES.some(ph => ph.id === 'flip'));
 assert.equal(G.PHASES[1].id, 'contract');
-assert.ok(G.CONTRACT.some(([, b]) => b.includes('natural life'))); // the buried clause
+assert.ok(G.CONTRACT.some(([h, b]) => h.includes('4.') && b.includes('tattoo'))); // the plant, section 4
 assert.ok(!G.CONTRACT.some(([h, b]) => h.includes('Taxes') || b.includes('withhold'))); // nothing telegraphs April
 assert.ok(G.CONTRACT[0][1].includes('CAPE TIDE'));
 assert.deepEqual(G.WRITE_PHASES, ['contract', 'r1', 'r2', 'cover', 'r4save', 'r4spend']);

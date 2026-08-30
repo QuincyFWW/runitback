@@ -50,17 +50,18 @@
   /* phases in which the phone writes a choices row, and which run object feeds it */
   const WRITE_PHASES = ['contract', 'r1', 'r2', 'cover', 'r4save', 'r4spend'];
 
-  /* the fictional deal they sign before round 1; clause 5(c) is the plant.
-     No taxes clause: nothing may telegraph April. Rendered as [heading, body]. */
+  /* the fictional deal they sign before round 1; section 4 is the plant (the
+     FWW logo tattoo). No taxes clause: nothing may telegraph April. */
   const CONTRACT = [
     ['NIL Endorsement Agreement', 'This one-year Name, Image and Likeness agreement is made between CAPE TIDE BEVERAGE CO., a maker of flavored alcoholic beverages ("Company"), and the undersigned student-athlete ("Athlete").'],
     ['1. Term', 'One (1) year from the date of signature below.'],
     ['2. Compensation', 'Company shall pay Athlete a one-time fee of $100,000, payable in full within five (5) business days of signing.'],
     ['3. Services', 'Athlete will provide: eight (8) social media posts, two (2) personal appearances, and one (1) photo shoot, scheduled around Athlete\'s team obligations.'],
-    ['4. Exclusivity', 'During the Term, Athlete will not endorse any competing beverage brand.'],
-    ['5. Rights', '(a) Company may use approved photos of Athlete in campaign materials during the Term. (b) Athlete retains ownership of Athlete\'s social channels. (c) Athlete hereby assigns to Company all of Athlete\'s media, name, image and likeness rights, in perpetuity, for the remainder of Athlete\'s natural life. (d) Company may sublicense the rights in this section.'],
-    ['6. Conduct', 'Athlete agrees to comply with all applicable school, conference and NCAA rules.'],
-    ['7. Miscellaneous', 'This document is the entire agreement between the parties and is governed by the laws of the Commonwealth of Massachusetts.'],
+    ['4. Brand Commitment', 'Within thirty (30) days of signing, Athlete shall obtain and maintain a permanent tattoo of the Final Whistle Wealth logo, no smaller than three (3) inches in width, on Athlete\'s arm, in a location visible while wearing a short-sleeved shirt. The tattoo shall be at Athlete\'s sole expense.'],
+    ['5. Exclusivity', 'During the Term, Athlete will not endorse any competing beverage brand.'],
+    ['6. Rights', '(a) Company may use approved photos of Athlete in campaign materials during the Term. (b) Athlete retains ownership of Athlete\'s social channels. (c) Company may sublicense the rights in this section.'],
+    ['7. Conduct', 'Athlete agrees to comply with all applicable school, conference and NCAA rules.'],
+    ['8. Miscellaneous', 'This document is the entire agreement between the parties and is governed by the laws of the Commonwealth of Massachusetts.'],
   ];
 
   const emptyRun = () => ({ spend: { car: 0, shopping: 0, housing: 0, vacation: 0 }, save: { hysa: 0, sp500: 0, roth: 0 } });
